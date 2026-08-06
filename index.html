@@ -1,0 +1,568 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda & Tarefas — Sallus</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --azul:#2563eb; --azul-esc:#1e40af; --bg:#f1f5f9; --card:#ffffff;
+    --txt:#0f172a; --txt2:#64748b; --linha:#e2e8f0;
+    --alta:#dc2626; --media:#d97706; --baixa:#059669;
+    --sombra:0 1px 3px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);font-size:15px}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:15px}
+
+  /* ---------- LOGIN ---------- */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-box{background:var(--card);border-radius:16px;box-shadow:var(--sombra);padding:32px;width:100%;max-width:380px}
+  .login-box h1{margin:0 0 4px;font-size:22px}
+  .login-box p{margin:0 0 24px;color:var(--txt2);font-size:14px}
+  .campo{margin-bottom:14px}
+  .campo label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
+  .campo input,.campo select,.campo textarea{width:100%;padding:11px 12px;border:1px solid var(--linha);border-radius:10px;background:#fff}
+  .campo input:focus,.campo select:focus,.campo textarea:focus{outline:2px solid var(--azul);border-color:transparent}
+  .btn{background:var(--azul);color:#fff;border:none;padding:12px;border-radius:10px;font-weight:600;width:100%;font-size:15px}
+  .btn:hover{background:var(--azul-esc)}
+  .btn-sec{background:#fff;color:var(--txt);border:1px solid var(--linha)}
+  .btn-sec:hover{background:#f8fafc}
+  .erro{color:var(--alta);font-size:13px;margin-top:10px;min-height:18px}
+
+  /* ---------- APP ---------- */
+  #app{display:none;max-width:900px;margin:0 auto;padding-bottom:80px}
+  header{background:var(--card);border-bottom:1px solid var(--linha);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20}
+  header .logo{font-weight:700;font-size:17px;color:var(--azul)}
+  header .quem{margin-left:auto;font-size:13px;color:var(--txt2);text-align:right;line-height:1.3}
+  header .sair{background:none;border:1px solid var(--linha);border-radius:8px;padding:6px 10px;font-size:13px;color:var(--txt2)}
+
+  nav{display:flex;gap:6px;background:var(--card);padding:8px 12px;border-bottom:1px solid var(--linha);position:sticky;top:53px;z-index:19}
+  nav button{flex:1;background:none;border:none;padding:10px;border-radius:10px;font-weight:600;color:var(--txt2);font-size:14px}
+  nav button.on{background:var(--azul);color:#fff}
+
+  .conteudo{padding:16px 18px}
+  .barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .filtros{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{background:var(--card);border:1px solid var(--linha);border-radius:20px;padding:7px 13px;font-size:13px;color:var(--txt2)}
+  .chip.on{background:var(--azul);color:#fff;border-color:var(--azul)}
+  .add{margin-left:auto;background:var(--azul);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:600;white-space:nowrap}
+  .add:hover{background:var(--azul-esc)}
+
+  /* ---------- CARDS DE TAREFA ---------- */
+  .grupo-titulo{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin:22px 0 10px}
+  .tarefa{background:var(--card);border:1px solid var(--linha);border-left:4px solid var(--linha);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--sombra)}
+  .tarefa.p-alta{border-left-color:var(--alta)}
+  .tarefa.p-media{border-left-color:var(--media)}
+  .tarefa.p-baixa{border-left-color:var(--baixa)}
+  .tarefa.feita{opacity:.6}
+  .tarefa.feita .t-titulo{text-decoration:line-through}
+  .t-topo{display:flex;align-items:flex-start;gap:10px}
+  .t-titulo{font-weight:600;font-size:15px;flex:1}
+  .t-desc{color:var(--txt2);font-size:13px;margin-top:4px;white-space:pre-wrap}
+  .t-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  .tag{font-size:12px;padding:3px 9px;border-radius:6px;background:#f1f5f9;color:var(--txt2)}
+  .tag.cli{background:#eff6ff;color:var(--azul)}
+  .tag.hoje{background:#fef3c7;color:#92400e;font-weight:600}
+  .tag.atrasada{background:#fee2e2;color:#991b1b;font-weight:600}
+  .tag.resp{background:#f0fdf4;color:#166534}
+  .t-status{border:1px solid var(--linha);border-radius:8px;padding:6px 8px;font-size:13px;background:#fff}
+  .t-acoes{display:flex;gap:6px;margin-left:auto}
+  .icon-btn{background:none;border:none;font-size:16px;padding:4px;color:var(--txt2);border-radius:6px}
+  .icon-btn:hover{background:#f1f5f9}
+  .vazio{text-align:center;color:var(--txt2);padding:50px 20px}
+  .vazio .em{font-size:40px;margin-bottom:8px}
+
+  /* ---------- ANOTAÇÕES ---------- */
+  .nota{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--sombra)}
+  .nota h3{margin:0 0 4px;font-size:15px}
+  .nota .n-conteudo{color:var(--txt);font-size:14px;white-space:pre-wrap;margin-top:8px;line-height:1.5}
+  .nota .n-meta{font-size:12px;color:var(--txt2);margin-top:10px;display:flex;gap:8px;align-items:center}
+
+  /* ---------- MODAL ---------- */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:50;align-items:flex-end;justify-content:center;padding:0}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:22px}
+  .modal h2{margin:0 0 18px;font-size:18px}
+  .modal .linha2{display:flex;gap:10px}
+  .modal .linha2>*{flex:1}
+  .modal-acoes{display:flex;gap:10px;margin-top:8px}
+  @media(min-width:560px){ .modal-bg{align-items:center} .modal{border-radius:18px} }
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:100;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+
+<!-- ============ TELA DE LOGIN ============ -->
+<div id="login">
+  <div class="login-box">
+    <h1>Agenda &amp; Tarefas</h1>
+    <p>Sallus Assessoria Contábil</p>
+    <div class="campo"><label>E-mail</label><input id="lg-email" type="email" autocomplete="username"></div>
+    <div class="campo"><label>Senha</label><input id="lg-senha" type="password" autocomplete="current-password"></div>
+    <button class="btn" onclick="entrar()">Entrar</button>
+    <div class="erro" id="lg-erro"></div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header>
+    <span class="logo">📋 Agenda &amp; Tarefas</span>
+    <div class="quem"><span id="me-nome"></span><br><span id="me-papel"></span></div>
+    <button class="sair" onclick="sair()">Sair</button>
+  </header>
+
+  <nav>
+    <button id="nav-tarefas" class="on" onclick="verAba('tarefas')">✓ Tarefas</button>
+    <button id="nav-notas" onclick="verAba('notas')">📝 Anotações</button>
+  </nav>
+
+  <!-- ABA TAREFAS -->
+  <div class="conteudo" id="aba-tarefas">
+    <div class="barra">
+      <div class="filtros" id="filtros-quando">
+        <button class="chip on" data-q="hoje" onclick="setFiltro('quando','hoje')">Hoje &amp; atrasadas</button>
+        <button class="chip" data-q="semana" onclick="setFiltro('quando','semana')">Esta semana</button>
+        <button class="chip" data-q="todas" onclick="setFiltro('quando','todas')">Todas abertas</button>
+        <button class="chip" data-q="concluidas" onclick="setFiltro('quando','concluidas')">Concluídas</button>
+      </div>
+      <button class="add" onclick="abrirTarefa()">+ Nova tarefa</button>
+    </div>
+    <div class="filtros" id="filtros-quem" style="margin-bottom:16px">
+      <button class="chip on" data-r="todos" onclick="setFiltro('quem','todos')">Todos</button>
+      <button class="chip" data-r="minhas" onclick="setFiltro('quem','minhas')">Minhas</button>
+      <button class="chip" data-r="equipe" onclick="setFiltro('quem','equipe')">Da equipe</button>
+    </div>
+    <div id="lista-tarefas"></div>
+  </div>
+
+  <!-- ABA ANOTAÇÕES -->
+  <div class="conteudo" id="aba-notas" style="display:none">
+    <div class="barra">
+      <div class="campo" style="flex:1;margin:0"><input id="busca-nota" placeholder="🔍 Buscar por cliente ou título..." oninput="renderNotas()"></div>
+      <button class="add" onclick="abrirNota()">+ Nova anotação</button>
+    </div>
+    <div id="lista-notas"></div>
+  </div>
+</div>
+
+<!-- ============ MODAL TAREFA ============ -->
+<div class="modal-bg" id="modal-tarefa">
+  <div class="modal">
+    <h2 id="mt-titulo">Nova tarefa</h2>
+    <input type="hidden" id="t-id">
+    <div class="campo"><label>Título *</label><input id="t-titulo" placeholder="Ex: Enviar guias do Simples"></div>
+    <div class="campo"><label>Descrição / passo-a-passo</label><textarea id="t-descricao" rows="3" placeholder="Detalhes, links, observações..."></textarea></div>
+    <div class="campo"><label>Cliente</label><input id="t-cliente" list="lista-clientes" placeholder="Ex: Acelera Corretora"></div>
+    <div class="linha2">
+      <div class="campo"><label>Responsável</label><select id="t-responsavel"></select></div>
+      <div class="campo"><label>Prioridade</label><select id="t-prioridade">
+        <option value="alta">🔴 Alta</option><option value="media" selected>🟠 Média</option><option value="baixa">🟢 Baixa</option>
+      </select></div>
+    </div>
+    <div class="linha2">
+      <div class="campo"><label>Prazo</label><input id="t-prazo" type="date"></div>
+      <div class="campo"><label>Hora (opcional)</label><input id="t-hora" type="time"></div>
+    </div>
+    <div class="campo"><label>Repetir</label><select id="t-recorrencia">
+      <option value="nenhuma">Não repete</option>
+      <option value="diaria">Todo dia</option>
+      <option value="semanal">Toda semana</option>
+      <option value="mensal">Todo mês (mesmo dia)</option>
+      <option value="anual">Todo ano</option>
+    </select></div>
+    <div class="modal-acoes">
+      <button class="btn btn-sec" onclick="fechar('modal-tarefa')">Cancelar</button>
+      <button class="btn" onclick="salvarTarefa()">Salvar</button>
+    </div>
+    <button class="btn btn-sec" id="mt-apagar" style="margin-top:10px;color:var(--alta)" onclick="apagarTarefa()">Excluir tarefa</button>
+  </div>
+</div>
+
+<!-- ============ MODAL NOTA ============ -->
+<div class="modal-bg" id="modal-nota">
+  <div class="modal">
+    <h2 id="mn-titulo">Nova anotação</h2>
+    <input type="hidden" id="n-id">
+    <div class="campo"><label>Cliente</label><input id="n-cliente" list="lista-clientes" placeholder="Ex: P4H Saúde"></div>
+    <div class="campo"><label>Título</label><input id="n-titulo" placeholder="Ex: Passo-a-passo fechamento mensal"></div>
+    <div class="campo"><label>Conteúdo</label><textarea id="n-conteudo" rows="8" placeholder="Anote aqui dados do cliente, senhas de portais (com cuidado), passo-a-passo de rotinas..."></textarea></div>
+    <div class="campo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="n-privada" style="width:auto"> Anotação privada (só eu vejo)</label></div>
+    <div class="modal-acoes">
+      <button class="btn btn-sec" onclick="fechar('modal-nota')">Cancelar</button>
+      <button class="btn" onclick="salvarNota()">Salvar</button>
+    </div>
+    <button class="btn btn-sec" id="mn-apagar" style="margin-top:10px;color:var(--alta)" onclick="apagarNota()">Excluir anotação</button>
+  </div>
+</div>
+
+<datalist id="lista-clientes"></datalist>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   >>> CONFIGURAÇÃO — cole aqui os dados do seu projeto Supabase <<<
+   (Supabase → Project Settings → API)
+   ============================================================ */
+const SUPABASE_URL  = "https://dqbygkhvefcqgzdztjkd.supabase.co";
+const SUPABASE_ANON = "sb_publishable_xLPFi73KdlM4qCb34stzkw_magqDqpk";
+/* ============================================================ */
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let EU = null;          // meu perfil
+let PERFIS = [];        // todos os perfis (para o dropdown de responsável)
+let TAREFAS = [];
+let NOTAS = [];
+let filtros = { quando:'hoje', quem:'todos' };
+
+/* ---------- Datas ---------- */
+function hojeISO(){
+  return new Date().toLocaleDateString('en-CA', {timeZone:'America/Sao_Paulo'}); // AAAA-MM-DD
+}
+function fmtData(iso){
+  if(!iso) return '';
+  const [a,m,d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+function proximaData(iso, recor){
+  const d = new Date(iso + 'T12:00:00');
+  if(recor==='diaria')  d.setDate(d.getDate()+1);
+  else if(recor==='semanal') d.setDate(d.getDate()+7);
+  else if(recor==='mensal')  d.setMonth(d.getMonth()+1);
+  else if(recor==='anual')   d.setFullYear(d.getFullYear()+1);
+  else return null;
+  return d.toISOString().slice(0,10);
+}
+
+/* ---------- Toast ---------- */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+async function entrar(){
+  const email = document.getElementById('lg-email').value.trim();
+  const senha = document.getElementById('lg-senha').value;
+  const erro  = document.getElementById('lg-erro');
+  erro.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+  if(error){ erro.textContent = 'E-mail ou senha incorretos.'; return; }
+  iniciar();
+}
+async function sair(){ await sb.auth.signOut(); location.reload(); }
+
+async function iniciar(){
+  const { data:{ user } } = await sb.auth.getUser();
+  if(!user){ return; }
+
+  // carrega perfis
+  const { data:perfis } = await sb.from('perfis').select('*').order('papel');
+  PERFIS = perfis || [];
+  EU = PERFIS.find(p => p.id === user.id) || { id:user.id, nome:user.email, papel:'estagiaria' };
+
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('me-nome').textContent = EU.nome || user.email;
+  document.getElementById('me-papel').textContent = EU.papel === 'gestora' ? 'Gestora' : 'Estagiária';
+
+  // preenche dropdown de responsável
+  const sel = document.getElementById('t-responsavel');
+  sel.innerHTML = PERFIS.map(p => `<option value="${p.id}">${p.nome||p.email||'—'}</option>`).join('');
+
+  await carregarTudo();
+}
+
+async function carregarTudo(){
+  const [{ data:t }, { data:n }] = await Promise.all([
+    sb.from('tarefas').select('*').order('prazo', {nullsFirst:false}).order('prioridade'),
+    sb.from('notas').select('*').order('atualizado_em', {ascending:false})
+  ]);
+  TAREFAS = t || [];
+  NOTAS = n || [];
+  atualizarClientes();
+  renderTarefas();
+  renderNotas();
+}
+
+function atualizarClientes(){
+  const set = new Set();
+  TAREFAS.forEach(t=> t.cliente && set.add(t.cliente));
+  NOTAS.forEach(n=> n.cliente && set.add(n.cliente));
+  document.getElementById('lista-clientes').innerHTML =
+    [...set].sort().map(c=>`<option value="${c}">`).join('');
+}
+
+/* ============================================================
+   NAVEGAÇÃO / FILTROS
+   ============================================================ */
+function verAba(aba){
+  document.getElementById('aba-tarefas').style.display = aba==='tarefas' ? 'block':'none';
+  document.getElementById('aba-notas').style.display   = aba==='notas' ? 'block':'none';
+  document.getElementById('nav-tarefas').classList.toggle('on', aba==='tarefas');
+  document.getElementById('nav-notas').classList.toggle('on', aba==='notas');
+}
+function setFiltro(tipo, valor){
+  filtros[tipo] = valor;
+  const grupo = tipo==='quando' ? 'filtros-quando' : 'filtros-quem';
+  document.querySelectorAll(`#${grupo} .chip`).forEach(c=>{
+    const v = c.dataset.q || c.dataset.r;
+    c.classList.toggle('on', v===valor);
+  });
+  renderTarefas();
+}
+
+/* ============================================================
+   RENDER TAREFAS
+   ============================================================ */
+function nomeDe(id){ const p = PERFIS.find(x=>x.id===id); return p ? (p.nome||p.email) : '—'; }
+
+function renderTarefas(){
+  const hoje = hojeISO();
+  const daquiUmaSemana = new Date(); daquiUmaSemana.setDate(daquiUmaSemana.getDate()+7);
+  const semanaISO = daquiUmaSemana.toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'});
+
+  let lista = TAREFAS.slice();
+
+  // filtro por responsável
+  if(filtros.quem==='minhas') lista = lista.filter(t=>t.responsavel_id===EU.id);
+  else if(filtros.quem==='equipe') lista = lista.filter(t=>t.responsavel_id && t.responsavel_id!==EU.id);
+
+  // filtro por período/status
+  if(filtros.quando==='concluidas'){
+    lista = lista.filter(t=>t.status==='concluida');
+  } else {
+    lista = lista.filter(t=>t.status!=='concluida');
+    if(filtros.quando==='hoje')
+      lista = lista.filter(t=> t.prazo && t.prazo<=hoje);
+    else if(filtros.quando==='semana')
+      lista = lista.filter(t=> t.prazo && t.prazo<=semanaISO);
+    // 'todas' = todas as abertas
+  }
+
+  const box = document.getElementById('lista-tarefas');
+  if(!lista.length){
+    box.innerHTML = `<div class="vazio"><div class="em">🎉</div>Nenhuma tarefa aqui. Aproveite!</div>`;
+    return;
+  }
+
+  // ordena: atrasada/hoje primeiro, depois por prazo, depois prioridade
+  const pesoP = {alta:0, media:1, baixa:2};
+  lista.sort((a,b)=>{
+    const pa = a.prazo||'9999', pb = b.prazo||'9999';
+    if(pa!==pb) return pa<pb?-1:1;
+    return pesoP[a.prioridade]-pesoP[b.prioridade];
+  });
+
+  box.innerHTML = lista.map(t=>cardTarefa(t, hoje)).join('');
+}
+
+function cardTarefa(t, hoje){
+  let badge = '';
+  if(t.status!=='concluida' && t.prazo){
+    if(t.prazo < hoje) badge = `<span class="tag atrasada">⚠ Atrasada · ${fmtData(t.prazo)}</span>`;
+    else if(t.prazo===hoje) badge = `<span class="tag hoje">📅 Hoje${t.hora?' · '+t.hora.slice(0,5):''}</span>`;
+    else badge = `<span class="tag">📅 ${fmtData(t.prazo)}${t.hora?' · '+t.hora.slice(0,5):''}</span>`;
+  }
+  const recor = t.recorrencia && t.recorrencia!=='nenhuma' ? `<span class="tag">🔁 ${({diaria:'Diária',semanal:'Semanal',mensal:'Mensal',anual:'Anual'})[t.recorrencia]}</span>` : '';
+  const feita = t.status==='concluida';
+  return `
+  <div class="tarefa p-${t.prioridade} ${feita?'feita':''}">
+    <div class="t-topo">
+      <div style="flex:1" onclick="abrirTarefa('${t.id}')">
+        <div class="t-titulo">${escapar(t.titulo)}</div>
+        ${t.descricao?`<div class="t-desc">${escapar(t.descricao)}</div>`:''}
+      </div>
+      <div class="t-acoes">
+        <button class="icon-btn" title="Editar" onclick="abrirTarefa('${t.id}')">✏️</button>
+      </div>
+    </div>
+    <div class="t-tags">
+      ${badge}
+      ${t.cliente?`<span class="tag cli">🏢 ${escapar(t.cliente)}</span>`:''}
+      <span class="tag resp">👤 ${escapar(nomeDe(t.responsavel_id))}</span>
+      ${recor}
+      <select class="t-status" onchange="mudarStatus('${t.id}', this.value)">
+        <option value="a_fazer" ${t.status==='a_fazer'?'selected':''}>◻️ A fazer</option>
+        <option value="fazendo" ${t.status==='fazendo'?'selected':''}>🔵 Fazendo</option>
+        <option value="concluida" ${t.status==='concluida'?'selected':''}>✅ Concluída</option>
+      </select>
+    </div>
+  </div>`;
+}
+
+function escapar(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- Mudar status (com repetição) ---------- */
+async function mudarStatus(id, novo){
+  const t = TAREFAS.find(x=>x.id===id);
+  if(!t) return;
+
+  // Se concluiu uma tarefa que se repete → agenda a próxima em vez de fechar
+  if(novo==='concluida' && t.recorrencia && t.recorrencia!=='nenhuma' && t.prazo){
+    const prox = proximaData(t.prazo, t.recorrencia);
+    await sb.from('tarefas').update({ prazo:prox, status:'a_fazer', atualizado_em:new Date().toISOString() }).eq('id', id);
+    toast(`Feito! Próxima: ${fmtData(prox)} 🔁`);
+  } else {
+    const patch = { status:novo, atualizado_em:new Date().toISOString() };
+    patch.concluida_em = novo==='concluida' ? new Date().toISOString() : null;
+    await sb.from('tarefas').update(patch).eq('id', id);
+    if(novo==='concluida') toast('Tarefa concluída! ✅');
+  }
+  await carregarTudo();
+}
+
+/* ---------- Modal tarefa ---------- */
+function abrirTarefa(id){
+  const m = document.getElementById('modal-tarefa');
+  const t = id ? TAREFAS.find(x=>x.id===id) : null;
+  document.getElementById('mt-titulo').textContent = t ? 'Editar tarefa' : 'Nova tarefa';
+  document.getElementById('t-id').value          = t ? t.id : '';
+  document.getElementById('t-titulo').value       = t ? t.titulo : '';
+  document.getElementById('t-descricao').value    = t ? (t.descricao||'') : '';
+  document.getElementById('t-cliente').value      = t ? (t.cliente||'') : '';
+  document.getElementById('t-responsavel').value  = t ? (t.responsavel_id||EU.id) : EU.id;
+  document.getElementById('t-prioridade').value   = t ? t.prioridade : 'media';
+  document.getElementById('t-prazo').value        = t ? (t.prazo||'') : hojeISO();
+  document.getElementById('t-hora').value         = t ? (t.hora? t.hora.slice(0,5):'') : '';
+  document.getElementById('t-recorrencia').value  = t ? t.recorrencia : 'nenhuma';
+  document.getElementById('mt-apagar').style.display = t ? 'block' : 'none';
+  m.classList.add('show');
+}
+
+async function salvarTarefa(){
+  const id = document.getElementById('t-id').value;
+  const titulo = document.getElementById('t-titulo').value.trim();
+  if(!titulo){ toast('Escreva um título 🙂'); return; }
+  const dados = {
+    titulo,
+    descricao:   document.getElementById('t-descricao').value.trim() || null,
+    cliente:     document.getElementById('t-cliente').value.trim() || null,
+    responsavel_id: document.getElementById('t-responsavel').value,
+    prioridade:  document.getElementById('t-prioridade').value,
+    prazo:       document.getElementById('t-prazo').value || null,
+    hora:        document.getElementById('t-hora').value || null,
+    recorrencia: document.getElementById('t-recorrencia').value,
+    atualizado_em: new Date().toISOString()
+  };
+  let error;
+  if(id){
+    ({ error } = await sb.from('tarefas').update(dados).eq('id', id));
+  } else {
+    dados.criado_por = EU.id;
+    ({ error } = await sb.from('tarefas').insert(dados));
+  }
+  if(error){ toast('Erro ao salvar 😕'); console.error(error); return; }
+  fechar('modal-tarefa');
+  await carregarTudo();
+  toast(id ? 'Tarefa atualizada!' : 'Tarefa criada!');
+}
+
+async function apagarTarefa(){
+  const id = document.getElementById('t-id').value;
+  if(!id) return;
+  if(!confirm('Excluir esta tarefa? Não dá pra desfazer.')) return;
+  await sb.from('tarefas').delete().eq('id', id);
+  fechar('modal-tarefa');
+  await carregarTudo();
+  toast('Tarefa excluída.');
+}
+
+/* ============================================================
+   ANOTAÇÕES
+   ============================================================ */
+function renderNotas(){
+  const busca = (document.getElementById('busca-nota').value||'').toLowerCase();
+  let lista = NOTAS.filter(n =>
+    (n.cliente||'').toLowerCase().includes(busca) ||
+    (n.titulo||'').toLowerCase().includes(busca) ||
+    (n.conteudo||'').toLowerCase().includes(busca)
+  );
+  const box = document.getElementById('lista-notas');
+  if(!lista.length){
+    box.innerHTML = `<div class="vazio"><div class="em">📝</div>Nenhuma anotação ainda.</div>`;
+    return;
+  }
+  // agrupa por cliente
+  const grupos = {};
+  lista.forEach(n=>{ const c = n.cliente||'Sem cliente'; (grupos[c]=grupos[c]||[]).push(n); });
+  box.innerHTML = Object.keys(grupos).sort().map(cli=>`
+    <div class="grupo-titulo">🏢 ${escapar(cli)}</div>
+    ${grupos[cli].map(cardNota).join('')}
+  `).join('');
+}
+
+function cardNota(n){
+  const meu = n.autor_id===EU.id;
+  return `
+  <div class="nota">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <h3 style="flex:1">${escapar(n.titulo||'(sem título)')} ${n.privada?'🔒':''}</h3>
+      ${meu||!n.privada ? `<button class="icon-btn" onclick="abrirNota('${n.id}')">✏️</button>`:''}
+    </div>
+    <div class="n-conteudo">${escapar(n.conteudo||'')}</div>
+    <div class="n-meta">✍️ ${escapar(nomeDe(n.autor_id))} · atualizado ${fmtData((n.atualizado_em||'').slice(0,10))}</div>
+  </div>`;
+}
+
+function abrirNota(id){
+  const n = id ? NOTAS.find(x=>x.id===id) : null;
+  document.getElementById('mn-titulo').textContent = n ? 'Editar anotação' : 'Nova anotação';
+  document.getElementById('n-id').value       = n ? n.id : '';
+  document.getElementById('n-cliente').value  = n ? (n.cliente||'') : '';
+  document.getElementById('n-titulo').value   = n ? (n.titulo||'') : '';
+  document.getElementById('n-conteudo').value = n ? (n.conteudo||'') : '';
+  document.getElementById('n-privada').checked = n ? n.privada : false;
+  document.getElementById('mn-apagar').style.display = (n && n.autor_id===EU.id) ? 'block' : 'none';
+  document.getElementById('modal-nota').classList.add('show');
+}
+
+async function salvarNota(){
+  const id = document.getElementById('n-id').value;
+  const dados = {
+    cliente:  document.getElementById('n-cliente').value.trim() || null,
+    titulo:   document.getElementById('n-titulo').value.trim() || null,
+    conteudo: document.getElementById('n-conteudo').value.trim() || null,
+    privada:  document.getElementById('n-privada').checked,
+    atualizado_em: new Date().toISOString()
+  };
+  let error;
+  if(id){
+    ({ error } = await sb.from('notas').update(dados).eq('id', id));
+  } else {
+    dados.autor_id = EU.id;
+    ({ error } = await sb.from('notas').insert(dados));
+  }
+  if(error){ toast('Erro ao salvar 😕'); console.error(error); return; }
+  fechar('modal-nota');
+  await carregarTudo();
+  toast(id ? 'Anotação atualizada!' : 'Anotação criada!');
+}
+
+async function apagarNota(){
+  const id = document.getElementById('n-id').value;
+  if(!id) return;
+  if(!confirm('Excluir esta anotação?')) return;
+  await sb.from('notas').delete().eq('id', id);
+  fechar('modal-nota');
+  await carregarTudo();
+  toast('Anotação excluída.');
+}
+
+/* ---------- utilidades ---------- */
+function fechar(idModal){ document.getElementById(idModal).classList.remove('show'); }
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click', e=>{ if(e.target===bg) bg.classList.remove('show'); });
+});
+
+/* ---------- inicia (mantém login salvo) ---------- */
+(async ()=>{
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session) iniciar();
+})();
+document.getElementById('lg-senha').addEventListener('keydown', e=>{ if(e.key==='Enter') entrar(); });
+</script>
