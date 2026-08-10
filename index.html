@@ -78,6 +78,27 @@
   .nota .n-conteudo{color:var(--txt);font-size:14px;white-space:pre-wrap;margin-top:8px;line-height:1.5}
   .nota .n-meta{font-size:12px;color:var(--txt2);margin-top:10px;display:flex;gap:8px;align-items:center}
 
+  /* ---------- CONTAS FIXAS ---------- */
+  .mes-nav{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+  .mes-nav .icon-btn{font-size:15px;border:1px solid var(--linha);border-radius:8px;padding:5px 10px}
+  .empresa-bloco{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:var(--sombra)}
+  .empresa-topo{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .empresa-topo h3{margin:0;font-size:16px;flex:1}
+  .empresa-totais{font-size:13px;color:var(--txt2);text-align:right;line-height:1.4}
+  .empresa-totais b{color:var(--txt)}
+  .conta{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--linha);flex-wrap:wrap}
+  .conta .c-nome{font-weight:600;flex:1;min-width:120px}
+  .conta .c-nome small{display:block;font-weight:400;color:var(--txt2);font-size:12px}
+  .conta .c-valor{font-weight:600;white-space:nowrap}
+  .venc{font-size:12px;padding:3px 9px;border-radius:6px;background:#f1f5f9;color:var(--txt2);white-space:nowrap}
+  .venc.hoje{background:#fef3c7;color:#92400e;font-weight:600}
+  .venc.breve{background:#fef9c3;color:#854d0e}
+  .venc.vencida{background:#fee2e2;color:#991b1b;font-weight:600}
+  .venc.paga{background:#dcfce7;color:#166534;font-weight:600}
+  .btn-pagar{background:#059669;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+  .btn-pagar:hover{background:#047857}
+  .btn-pago{background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+
   /* ---------- MODAL ---------- */
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:50;align-items:flex-end;justify-content:center;padding:0}
   .modal-bg.show{display:flex}
@@ -114,6 +135,7 @@
 
   <nav>
     <button id="nav-tarefas" class="on" onclick="verAba('tarefas')">✓ Tarefas</button>
+    <button id="nav-contas" onclick="verAba('contas')">💰 Contas Fixas</button>
     <button id="nav-notas" onclick="verAba('notas')">📝 Anotações</button>
   </nav>
 
@@ -134,6 +156,20 @@
       <button class="chip" data-r="equipe" onclick="setFiltro('quem','equipe')">Da equipe</button>
     </div>
     <div id="lista-tarefas"></div>
+  </div>
+
+  <!-- ABA CONTAS FIXAS -->
+  <div class="conteudo" id="aba-contas" style="display:none">
+    <div class="barra">
+      <div class="mes-nav">
+        <button class="icon-btn" onclick="mudarMes(-1)">◀</button>
+        <span id="mes-label"></span>
+        <button class="icon-btn" onclick="mudarMes(1)">▶</button>
+      </div>
+      <button class="add" onclick="abrirConta()">+ Nova conta</button>
+    </div>
+    <div id="resumo-contas"></div>
+    <div id="lista-contas"></div>
   </div>
 
   <!-- ABA ANOTAÇÕES -->
@@ -196,7 +232,50 @@
   </div>
 </div>
 
+<!-- ============ MODAL CONTA FIXA ============ -->
+<div class="modal-bg" id="modal-conta">
+  <div class="modal">
+    <h2 id="mc-titulo">Nova conta fixa</h2>
+    <input type="hidden" id="c-id">
+    <div class="campo"><label>Empresa *</label><input id="c-empresa" list="lista-empresas" placeholder="Ex: Empresa A"></div>
+    <div class="campo"><label>Nome da despesa *</label><input id="c-nome" placeholder="Ex: Aluguel, Energia, Internet..."></div>
+    <div class="linha2">
+      <div class="campo"><label>Dia do vencimento *</label><input id="c-dia" type="number" min="1" max="31" placeholder="Ex: 10"></div>
+      <div class="campo"><label>Valor previsto (R$)</label><input id="c-valor" type="number" step="0.01" min="0" placeholder="Ex: 3000,00"></div>
+    </div>
+    <div class="linha2">
+      <div class="campo"><label>Categoria (opcional)</label><input id="c-categoria" placeholder="Ex: Estrutura"></div>
+      <div class="campo"><label>Avisar quantos dias antes</label><input id="c-aviso" type="number" min="0" max="30" value="3"></div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-sec" onclick="fechar('modal-conta')">Cancelar</button>
+      <button class="btn" onclick="salvarConta()">Salvar</button>
+    </div>
+    <button class="btn btn-sec" id="mc-apagar" style="margin-top:10px;color:var(--alta)" onclick="apagarConta()">Excluir conta fixa</button>
+  </div>
+</div>
+
+<!-- ============ MODAL PAGAMENTO ============ -->
+<div class="modal-bg" id="modal-pagamento">
+  <div class="modal">
+    <h2 id="mp-titulo">Registrar pagamento</h2>
+    <input type="hidden" id="pg-conta-id">
+    <input type="hidden" id="pg-id">
+    <p id="pg-info" style="color:var(--txt2);font-size:14px;margin:-8px 0 16px"></p>
+    <div class="linha2">
+      <div class="campo"><label>Valor pago (R$)</label><input id="pg-valor" type="number" step="0.01" min="0"></div>
+      <div class="campo"><label>Data do pagamento</label><input id="pg-data" type="date"></div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-sec" onclick="fechar('modal-pagamento')">Cancelar</button>
+      <button class="btn" onclick="salvarPagamento()">Confirmar pagamento</button>
+    </div>
+    <button class="btn btn-sec" id="mp-desfazer" style="margin-top:10px;color:var(--alta);display:none" onclick="desfazerPagamento()">Marcar como NÃO paga</button>
+  </div>
+</div>
+
 <datalist id="lista-clientes"></datalist>
+<datalist id="lista-empresas"></datalist>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -214,7 +293,10 @@ let EU = null;          // meu perfil
 let PERFIS = [];        // todos os perfis (para o dropdown de responsável)
 let TAREFAS = [];
 let NOTAS = [];
+let CONTAS = [];        // contas fixas
+let PAGAMENTOS = [];    // pagamentos do mês selecionado
 let filtros = { quando:'hoje', quem:'todos' };
+let mesSel = null;      // competência selecionada nas Contas Fixas (AAAA-MM)
 
 /* ---------- Datas ---------- */
 function hojeISO(){
@@ -233,6 +315,21 @@ function proximaData(iso, recor){
   else if(recor==='anual')   d.setFullYear(d.getFullYear()+1);
   else return null;
   return d.toISOString().slice(0,10);
+}
+function mesAtual(){ return hojeISO().slice(0,7); } // AAAA-MM
+function fmtMoeda(v){
+  if(v===null || v===undefined || v==='') return '—';
+  return Number(v).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+function nomeMes(comp){
+  const [a,m] = comp.split('-');
+  const meses = ['','janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${meses[+m]} de ${a}`;
+}
+function diasNoMes(comp){ const [a,m]=comp.split('-').map(Number); return new Date(a, m, 0).getDate(); }
+function dataVencimento(comp, dia){ // devolve AAAA-MM-DD, ajustando dia ao tamanho do mês
+  const d = Math.min(dia, diasNoMes(comp));
+  return `${comp}-${String(d).padStart(2,'0')}`;
 }
 
 /* ---------- Toast ---------- */
@@ -278,15 +375,21 @@ async function iniciar(){
 }
 
 async function carregarTudo(){
-  const [{ data:t }, { data:n }] = await Promise.all([
+  if(!mesSel) mesSel = mesAtual();
+  const [{ data:t }, { data:n }, { data:c }, { data:pg }] = await Promise.all([
     sb.from('tarefas').select('*').order('prazo', {nullsFirst:false}).order('prioridade'),
-    sb.from('notas').select('*').order('atualizado_em', {ascending:false})
+    sb.from('notas').select('*').order('atualizado_em', {ascending:false}),
+    sb.from('contas_fixas').select('*').order('dia_vencimento'),
+    sb.from('pagamentos').select('*').eq('competencia', mesSel)
   ]);
   TAREFAS = t || [];
   NOTAS = n || [];
+  CONTAS = c || [];
+  PAGAMENTOS = pg || [];
   atualizarClientes();
   renderTarefas();
   renderNotas();
+  renderContas();
 }
 
 function atualizarClientes(){
@@ -295,6 +398,10 @@ function atualizarClientes(){
   NOTAS.forEach(n=> n.cliente && set.add(n.cliente));
   document.getElementById('lista-clientes').innerHTML =
     [...set].sort().map(c=>`<option value="${c}">`).join('');
+  const emp = new Set();
+  CONTAS.forEach(c=> c.empresa && emp.add(c.empresa));
+  document.getElementById('lista-empresas').innerHTML =
+    [...emp].sort().map(e=>`<option value="${e}">`).join('');
 }
 
 /* ============================================================
@@ -302,8 +409,10 @@ function atualizarClientes(){
    ============================================================ */
 function verAba(aba){
   document.getElementById('aba-tarefas').style.display = aba==='tarefas' ? 'block':'none';
+  document.getElementById('aba-contas').style.display  = aba==='contas' ? 'block':'none';
   document.getElementById('aba-notas').style.display   = aba==='notas' ? 'block':'none';
   document.getElementById('nav-tarefas').classList.toggle('on', aba==='tarefas');
+  document.getElementById('nav-contas').classList.toggle('on', aba==='contas');
   document.getElementById('nav-notas').classList.toggle('on', aba==='notas');
 }
 function setFiltro(tipo, valor){
@@ -551,6 +660,199 @@ async function apagarNota(){
   fechar('modal-nota');
   await carregarTudo();
   toast('Anotação excluída.');
+}
+
+/* ============================================================
+   CONTAS FIXAS
+   ============================================================ */
+function diffDias(isoA, isoB){ return Math.round((new Date(isoB+'T12:00:00') - new Date(isoA+'T12:00:00'))/86400000); }
+
+function mudarMes(delta){
+  let [a,m] = mesSel.split('-').map(Number);
+  m += delta;
+  if(m<1){ m=12; a--; } if(m>12){ m=1; a++; }
+  mesSel = `${a}-${String(m).padStart(2,'0')}`;
+  carregarTudo();
+}
+
+function renderContas(){
+  document.getElementById('mes-label').textContent = nomeMes(mesSel);
+  const box = document.getElementById('lista-contas');
+  const resumo = document.getElementById('resumo-contas');
+
+  if(!CONTAS.length){
+    resumo.innerHTML = '';
+    box.innerHTML = `<div class="vazio"><div class="em">💰</div>Nenhuma conta fixa cadastrada ainda.<br>Clique em <b>+ Nova conta</b> para começar.</div>`;
+    return;
+  }
+
+  const hoje = hojeISO();
+  const ehMesAtual = (mesSel === mesAtual());
+
+  // agrupa por empresa
+  const grupos = {};
+  CONTAS.forEach(c=>{ const e = c.empresa||'Sem empresa'; (grupos[e]=grupos[e]||[]).push(c); });
+
+  // resumo geral (todas as empresas)
+  let totPrev=0, totPago=0;
+  CONTAS.forEach(c=>{
+    totPrev += Number(c.valor_previsto)||0;
+    const pg = PAGAMENTOS.find(p=>p.conta_fixa_id===c.id);
+    if(pg) totPago += Number(pg.valor_pago)||0;
+  });
+  resumo.innerHTML = `<div class="empresa-totais" style="text-align:left;margin-bottom:8px;font-size:14px">
+    Total previsto no mês: <b>${fmtMoeda(totPrev)}</b> · já pago: <b style="color:#059669">${fmtMoeda(totPago)}</b></div>`;
+
+  box.innerHTML = Object.keys(grupos).sort().map(emp=>{
+    const contas = grupos[emp].sort((a,b)=>(a.dia_vencimento||0)-(b.dia_vencimento||0));
+    let prev=0, pago=0;
+    contas.forEach(c=>{
+      prev += Number(c.valor_previsto)||0;
+      const pg = PAGAMENTOS.find(p=>p.conta_fixa_id===c.id);
+      if(pg) pago += Number(pg.valor_pago)||0;
+    });
+    return `
+    <div class="empresa-bloco">
+      <div class="empresa-topo">
+        <h3>🏢 ${escapar(emp)}</h3>
+        <div class="empresa-totais">Previsto: <b>${fmtMoeda(prev)}</b><br>Pago: <b style="color:#059669">${fmtMoeda(pago)}</b></div>
+      </div>
+      ${contas.map(c=>linhaConta(c, hoje, ehMesAtual)).join('')}
+    </div>`;
+  }).join('');
+}
+
+function linhaConta(c, hoje, ehMesAtual){
+  const venc = dataVencimento(mesSel, c.dia_vencimento);
+  const pg = PAGAMENTOS.find(p=>p.conta_fixa_id===c.id);
+  let badge, acao;
+
+  if(pg){
+    badge = `<span class="venc paga">✅ Pago ${pg.pago_em?'· '+fmtData(pg.pago_em):''}</span>`;
+    acao = `<button class="btn-pago" onclick="abrirPagamento('${c.id}')">${fmtMoeda(pg.valor_pago)} ✓</button>`;
+  } else {
+    if(!ehMesAtual && mesSel < mesAtual())      badge = `<span class="venc vencida">Não paga · venceu ${fmtData(venc)}</span>`;
+    else if(!ehMesAtual && mesSel > mesAtual()) badge = `<span class="venc">Vence dia ${c.dia_vencimento}</span>`;
+    else { // mês atual
+      const d = diffDias(hoje, venc);
+      if(d < 0)       badge = `<span class="venc vencida">⚠ Vencida · ${fmtData(venc)}</span>`;
+      else if(d===0)  badge = `<span class="venc hoje">📅 Vence hoje</span>`;
+      else if(d <= (c.avisar_dias_antes??3)) badge = `<span class="venc breve">⏰ Vence em ${d} dia${d>1?'s':''}</span>`;
+      else            badge = `<span class="venc">Vence dia ${c.dia_vencimento}</span>`;
+    }
+    acao = `<button class="btn-pagar" onclick="abrirPagamento('${c.id}')">Registrar pagamento</button>`;
+  }
+
+  return `
+  <div class="conta">
+    <div class="c-nome">${escapar(c.nome)}${c.categoria?`<small>${escapar(c.categoria)}</small>`:''}</div>
+    ${badge}
+    <span class="c-valor">${fmtMoeda(c.valor_previsto)}</span>
+    ${acao}
+    <button class="icon-btn" title="Editar conta" onclick="abrirConta('${c.id}')">✏️</button>
+  </div>`;
+}
+
+/* ---------- Modal conta fixa ---------- */
+function abrirConta(id){
+  const c = id ? CONTAS.find(x=>x.id===id) : null;
+  document.getElementById('mc-titulo').textContent = c ? 'Editar conta fixa' : 'Nova conta fixa';
+  document.getElementById('c-id').value        = c ? c.id : '';
+  document.getElementById('c-empresa').value   = c ? (c.empresa||'') : '';
+  document.getElementById('c-nome').value      = c ? (c.nome||'') : '';
+  document.getElementById('c-dia').value       = c ? (c.dia_vencimento||'') : '';
+  document.getElementById('c-valor').value     = c ? (c.valor_previsto??'') : '';
+  document.getElementById('c-categoria').value = c ? (c.categoria||'') : '';
+  document.getElementById('c-aviso').value     = c ? (c.avisar_dias_antes??3) : 3;
+  document.getElementById('mc-apagar').style.display = c ? 'block' : 'none';
+  document.getElementById('modal-conta').classList.add('show');
+}
+
+async function salvarConta(){
+  const id = document.getElementById('c-id').value;
+  const empresa = document.getElementById('c-empresa').value.trim();
+  const nome = document.getElementById('c-nome').value.trim();
+  const dia = parseInt(document.getElementById('c-dia').value, 10);
+  if(!empresa){ toast('Informe a empresa 🙂'); return; }
+  if(!nome){ toast('Informe o nome da despesa 🙂'); return; }
+  if(!dia || dia<1 || dia>31){ toast('Dia do vencimento entre 1 e 31'); return; }
+  const valor = document.getElementById('c-valor').value;
+  const dados = {
+    empresa, nome,
+    dia_vencimento: dia,
+    valor_previsto: valor==='' ? null : Number(valor),
+    categoria: document.getElementById('c-categoria').value.trim() || null,
+    avisar_dias_antes: parseInt(document.getElementById('c-aviso').value,10) || 0
+  };
+  let error;
+  if(id){
+    ({ error } = await sb.from('contas_fixas').update(dados).eq('id', id));
+  } else {
+    dados.criado_por = EU.id;
+    ({ error } = await sb.from('contas_fixas').insert(dados));
+  }
+  if(error){ toast('Erro ao salvar 😕'); console.error(error); return; }
+  fechar('modal-conta');
+  await carregarTudo();
+  toast(id ? 'Conta atualizada!' : 'Conta cadastrada!');
+}
+
+async function apagarConta(){
+  const id = document.getElementById('c-id').value;
+  if(!id) return;
+  if(!confirm('Excluir esta conta fixa? Todo o histórico de pagamentos dela também será apagado.')) return;
+  await sb.from('contas_fixas').delete().eq('id', id);
+  fechar('modal-conta');
+  await carregarTudo();
+  toast('Conta excluída.');
+}
+
+/* ---------- Modal pagamento ---------- */
+function abrirPagamento(contaId){
+  const c = CONTAS.find(x=>x.id===contaId);
+  if(!c) return;
+  const pg = PAGAMENTOS.find(p=>p.conta_fixa_id===contaId);
+  document.getElementById('pg-conta-id').value = contaId;
+  document.getElementById('pg-id').value = pg ? pg.id : '';
+  document.getElementById('mp-titulo').textContent = pg ? 'Pagamento registrado' : 'Registrar pagamento';
+  document.getElementById('pg-info').textContent = `${c.nome} · ${c.empresa} · ${nomeMes(mesSel)}`;
+  document.getElementById('pg-valor').value = pg ? (pg.valor_pago??'') : (c.valor_previsto??'');
+  document.getElementById('pg-data').value  = pg ? (pg.pago_em||hojeISO()) : hojeISO();
+  document.getElementById('mp-desfazer').style.display = pg ? 'block' : 'none';
+  document.getElementById('modal-pagamento').classList.add('show');
+}
+
+async function salvarPagamento(){
+  const id = document.getElementById('pg-id').value;
+  const contaId = document.getElementById('pg-conta-id').value;
+  const valor = document.getElementById('pg-valor').value;
+  const dados = {
+    conta_fixa_id: contaId,
+    competencia: mesSel,
+    valor_pago: valor==='' ? null : Number(valor),
+    pago_em: document.getElementById('pg-data').value || hojeISO()
+  };
+  let error;
+  if(id){
+    ({ error } = await sb.from('pagamentos').update(dados).eq('id', id));
+  } else {
+    dados.registrado_por = EU.id;
+    ({ error } = await sb.from('pagamentos').insert(dados));
+  }
+  if(error){ toast('Erro ao registrar 😕'); console.error(error); return; }
+  fechar('modal-pagamento');
+  await carregarTudo();
+  toast('Pagamento registrado! ✅');
+}
+
+async function desfazerPagamento(){
+  const id = document.getElementById('pg-id').value;
+  if(!id) return;
+  if(!confirm('Marcar esta conta como NÃO paga neste mês?')) return;
+  await sb.from('pagamentos').delete().eq('id', id);
+  fechar('modal-pagamento');
+  await carregarTudo();
+  toast('Marcada como não paga.');
 }
 
 /* ---------- utilidades ---------- */

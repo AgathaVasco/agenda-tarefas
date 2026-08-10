@@ -12,6 +12,7 @@ App de agenda com **lembretes por e-mail** + **controle de tarefas da estagiári
 |---|---|---|
 | `index.html` | O app em si (a tela) | Vai pro GitHub, igual ao Acelera |
 | `1-banco-de-dados.sql` | Cria as tabelas no Supabase | Colar no Supabase (Etapa 1) |
+| `4-contas-fixas.sql` | Cria as tabelas das Contas Fixas | Colar no Supabase (Etapa 1-B) |
 | `2-robo-lembretes.ts` | O robô que manda os e-mails | Colar no Supabase (Etapa 3) |
 | `3-agendar-robo.sql` | Faz o robô rodar todo dia | Colar no Supabase (Etapa 3) |
 | `GUIA-DO-PROJETO.md` | Este guia | Ler 🙂 |
@@ -132,6 +133,9 @@ Crie uma tarefa com prazo **para hoje**, atribuída a você. Depois, no Supabase
 - **Filtros de cima:** *Hoje & atrasadas* / *Esta semana* / *Todas* / *Concluídas*.
 - **Filtros de baixo:** *Minhas* / *Da equipe* — pra separar o que é seu do que é da estagiária.
 - **Anotações:** aba 📝. Guarde passo-a-passo e dados de cada cliente. Ficam **compartilhadas** entre vocês duas; marque **privada** se for só sua.
+- **Contas Fixas:** aba 💰. Cadastre as despesas fixas de cada empresa (nome, dia do vencimento e valor previsto). O app mostra, **por empresa**, o que já foi pago e o que falta no mês, com os totais. Quando pagar, clique em **Registrar pagamento** e informe o valor real — o histórico fica guardado mês a mês (use as setas ◀ ▶ para ver outros meses). Os vencimentos entram no e-mail diário (avisando antes e no dia).
+
+> ⚠️ **Antes de usar as Contas Fixas** você precisa rodar uma vez o `4-contas-fixas.sql` no Supabase (SQL Editor → New query → cola → Run), igual fez com o `1-banco-de-dados.sql`.
 
 ---
 
