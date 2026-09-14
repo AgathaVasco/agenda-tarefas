@@ -15,7 +15,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BREVO_API_KEY   = Deno.env.get("BREVO_API_KEY")!;
 const REMETENTE_EMAIL = Deno.env.get("REMETENTE_EMAIL")!;   // ex: agatha.vasco@conflex.com.br
-const REMETENTE_NOME  = Deno.env.get("REMETENTE_NOME") ?? "Agenda & Tarefas";
+const REMETENTE_NOME  = Deno.env.get("REMETENTE_NOME") ?? "Nossa Agenda";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -142,7 +142,7 @@ Deno.serve(async () => {
           ${tarefasHtml || (totalTarefas === 0 ? '<p style="color:#64748b;font-size:14px;margin:14px 0 0">Nenhuma tarefa para hoje. 🎉</p>' : "")}
           ${fixasHtml}
           <p style="margin:22px 0 0;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px">
-            Enviado automaticamente pela sua Agenda &amp; Tarefas · Sallus
+            Enviado automaticamente pela Nossa Agenda · Sallus
           </p>
         </div>
       </div>`;
