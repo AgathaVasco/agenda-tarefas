@@ -99,6 +99,72 @@
   .btn-pagar:hover{background:#047857}
   .btn-pago{background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap}
 
+  /* ---------- TELA INÍCIO ---------- */
+  .saudacao{margin-bottom:14px}
+  .saudacao h2{margin:0;font-size:20px}
+  .saudacao p{margin:2px 0 0;color:var(--txt2);font-size:14px}
+
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+  .tile{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:12px;box-shadow:var(--sombra);cursor:pointer;border-left:4px solid var(--azul)}
+  .tile:hover{background:#f8fafc}
+  .tile.t-vermelho{border-left-color:var(--alta)}
+  .tile.t-laranja{border-left-color:var(--media)}
+  .tile.t-verde{border-left-color:var(--baixa)}
+  .tile .num{font-size:24px;font-weight:700;line-height:1}
+  .tile .rot{font-size:12px;color:var(--txt2);margin-top:4px}
+  @media(max-width:560px){ .tiles{grid-template-columns:repeat(2,1fr)} }
+
+  .secao-titulo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--txt);margin:22px 0 10px}
+
+  .cal-wrap{position:relative;background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:14px;box-shadow:var(--sombra)}
+  .cal-head{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;margin-bottom:12px}
+  .cal-head .icon-btn{border:1px solid var(--linha);border-radius:8px;padding:4px 10px}
+  .btn-hoje{margin-left:auto;background:#eff6ff;color:var(--azul);border:none;border-radius:8px;padding:6px 12px;font-weight:600;font-size:13px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--txt2);padding:4px 0;text-transform:uppercase}
+  .cal-cell{min-height:52px;border-radius:9px;padding:5px 4px;font-size:13px;position:relative;border:1px solid transparent;background:#f8fafc}
+  .cal-cell.vazia{background:transparent}
+  .cal-cell.tem{cursor:pointer;background:#fff;border-color:var(--linha)}
+  .cal-cell.tem:hover{border-color:var(--azul);box-shadow:0 0 0 2px #dbeafe}
+  .cal-cell.hoje{background:#eff6ff;border-color:var(--azul);font-weight:700}
+  .cal-cell .dnum{font-size:12px;color:var(--txt2)}
+  .cal-cell.hoje .dnum{color:var(--azul)}
+  .cal-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px}
+  .dot{width:7px;height:7px;border-radius:50%}
+  .dot.alta{background:var(--alta)} .dot.media{background:var(--media)} .dot.baixa{background:var(--baixa)}
+  .cal-cnt{position:absolute;top:4px;right:5px;font-size:10px;font-weight:700;color:var(--azul)}
+  .cal-money{position:absolute;bottom:4px;right:5px;font-size:11px}
+
+  .cal-pop{position:absolute;z-index:40;background:#fff;border:1px solid var(--linha);border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.18);padding:12px;width:250px;max-width:80vw}
+  .cal-pop h4{margin:0 0 8px;font-size:14px}
+  .cal-pop .pitem{font-size:13px;padding:5px 0;border-top:1px solid var(--linha);display:flex;gap:6px;align-items:flex-start}
+  .cal-pop .pitem:first-of-type{border-top:none}
+  .cal-pop .pdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+
+  .semana{display:flex;flex-direction:column;gap:8px}
+  .semana-dia{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:10px 12px;box-shadow:var(--sombra)}
+  .semana-dia.hoje{border-color:var(--azul);background:#f8fbff}
+  .semana-dia .sd-topo{font-size:13px;font-weight:700;margin-bottom:7px;text-transform:capitalize;display:flex;align-items:center;gap:8px}
+  .semana-dia .sd-topo .qtd{margin-left:auto;font-weight:400;color:var(--txt2);font-size:12px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip-t{font-size:12px;padding:4px 9px;border-radius:7px;border:1px solid;display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+  .chip-t.pessoa-gestora{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+  .chip-t.pessoa-estagiaria{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+  .chip-t.pessoa-nenhum{background:#f1f5f9;border-color:var(--linha);color:var(--txt2)}
+  .chip-t.feita{opacity:.5;text-decoration:line-through}
+  .chip-t.conta{background:#fffbeb;border-color:#fde68a;color:#92400e;cursor:default}
+  .sd-vazio{font-size:12px;color:var(--txt2)}
+
+  .dois-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){ .dois-cols{grid-template-columns:1fr} }
+  .mini{background:var(--card);border:1px solid var(--linha);border-radius:10px;padding:10px 12px;margin-bottom:8px;box-shadow:var(--sombra);display:flex;align-items:center;gap:10px}
+  .mini .mi-nome{flex:1;font-size:14px}
+  .mini .mi-nome small{display:block;color:var(--txt2);font-size:12px}
+  .mini .mi-val{font-weight:600;font-size:13px;white-space:nowrap}
+  .mini .mi-tag{font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .mini .mi-tag.pend{background:#fef3c7;color:#92400e}
+  .mini .mi-tag.pago{background:#dcfce7;color:#166534}
+
   /* ---------- MODAL ---------- */
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:50;align-items:flex-end;justify-content:center;padding:0}
   .modal-bg.show{display:flex}
@@ -134,13 +200,47 @@
   </header>
 
   <nav>
-    <button id="nav-tarefas" class="on" onclick="verAba('tarefas')">✓ Tarefas</button>
-    <button id="nav-contas" onclick="verAba('contas')">💰 Contas Fixas</button>
-    <button id="nav-notas" onclick="verAba('notas')">📝 Anotações</button>
+    <button id="nav-inicio" class="on" onclick="verAba('inicio')">🏠 Início</button>
+    <button id="nav-tarefas" onclick="verAba('tarefas')">✓ Tarefas</button>
+    <button id="nav-contas" onclick="verAba('contas')">💰 Contas</button>
+    <button id="nav-notas" onclick="verAba('notas')">📝 Notas</button>
   </nav>
 
+  <!-- ABA INÍCIO -->
+  <div class="conteudo" id="aba-inicio">
+    <div id="saudacao" class="saudacao"></div>
+    <div id="tiles" class="tiles"></div>
+
+    <div class="cal-wrap">
+      <div class="cal-head">
+        <button class="icon-btn" onclick="calMudarMes(-1)">◀</button>
+        <span id="cal-label"></span>
+        <button class="icon-btn" onclick="calMudarMes(1)">▶</button>
+        <button class="btn-hoje" onclick="calHoje()">Hoje</button>
+      </div>
+      <div id="cal-grid" class="cal-grid"></div>
+      <div id="cal-pop" class="cal-pop" hidden></div>
+    </div>
+
+    <div class="secao-titulo">📆 Fluxo da semana
+      <div class="filtros" id="filtros-semana" style="margin-left:auto"></div>
+    </div>
+    <div id="semana" class="semana"></div>
+
+    <div class="dois-cols">
+      <div>
+        <div class="secao-titulo">✓ Tarefas de hoje</div>
+        <div id="hoje-lista"></div>
+      </div>
+      <div>
+        <div class="secao-titulo">💰 Próximos vencimentos</div>
+        <div id="venc-lista"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ABA TAREFAS -->
-  <div class="conteudo" id="aba-tarefas">
+  <div class="conteudo" id="aba-tarefas" style="display:none">
     <div class="barra">
       <div class="filtros" id="filtros-quando">
         <button class="chip on" data-q="hoje" onclick="setFiltro('quando','hoje')">Hoje &amp; atrasadas</button>
@@ -294,9 +394,12 @@ let PERFIS = [];        // todos os perfis (para o dropdown de responsável)
 let TAREFAS = [];
 let NOTAS = [];
 let CONTAS = [];        // contas fixas
-let PAGAMENTOS = [];    // pagamentos do mês selecionado
+let PAG_ALL = [];       // todos os pagamentos (histórico completo)
+let PAGAMENTOS = [];    // pagamentos do mês selecionado (aba Contas)
 let filtros = { quando:'hoje', quem:'todos' };
 let mesSel = null;      // competência selecionada nas Contas Fixas (AAAA-MM)
+let calMes = null;      // mês exibido no calendário do Início
+let semanaFiltro = 'todos'; // filtro do fluxo da semana
 
 /* ---------- Datas ---------- */
 function hojeISO(){
@@ -376,21 +479,25 @@ async function iniciar(){
 
 async function carregarTudo(){
   if(!mesSel) mesSel = mesAtual();
+  if(!calMes) calMes = mesAtual();
   const [{ data:t }, { data:n }, { data:c }, { data:pg }] = await Promise.all([
     sb.from('tarefas').select('*').order('prazo', {nullsFirst:false}).order('prioridade'),
     sb.from('notas').select('*').order('atualizado_em', {ascending:false}),
     sb.from('contas_fixas').select('*').order('dia_vencimento'),
-    sb.from('pagamentos').select('*').eq('competencia', mesSel)
+    sb.from('pagamentos').select('*')
   ]);
   TAREFAS = t || [];
   NOTAS = n || [];
   CONTAS = c || [];
-  PAGAMENTOS = pg || [];
+  PAG_ALL = pg || [];
+  PAGAMENTOS = PAG_ALL.filter(p=>p.competencia===mesSel);
   atualizarClientes();
+  renderInicio();
   renderTarefas();
   renderNotas();
   renderContas();
 }
+function pagoDe(contaId, comp){ return PAG_ALL.find(p=>p.conta_fixa_id===contaId && p.competencia===comp) || null; }
 
 function atualizarClientes(){
   const set = new Set();
@@ -408,12 +515,15 @@ function atualizarClientes(){
    NAVEGAÇÃO / FILTROS
    ============================================================ */
 function verAba(aba){
+  document.getElementById('aba-inicio').style.display  = aba==='inicio' ? 'block':'none';
   document.getElementById('aba-tarefas').style.display = aba==='tarefas' ? 'block':'none';
   document.getElementById('aba-contas').style.display  = aba==='contas' ? 'block':'none';
   document.getElementById('aba-notas').style.display   = aba==='notas' ? 'block':'none';
+  document.getElementById('nav-inicio').classList.toggle('on', aba==='inicio');
   document.getElementById('nav-tarefas').classList.toggle('on', aba==='tarefas');
   document.getElementById('nav-contas').classList.toggle('on', aba==='contas');
   document.getElementById('nav-notas').classList.toggle('on', aba==='notas');
+  fecharPop();
 }
 function setFiltro(tipo, valor){
   filtros[tipo] = valor;
@@ -855,10 +965,177 @@ async function desfazerPagamento(){
   toast('Marcada como não paga.');
 }
 
+/* ============================================================
+   TELA INÍCIO
+   ============================================================ */
+function somaDias(iso, n){ const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function diaSemanaCurto(iso){ return new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short'}).replace('.',''); }
+function papelDe(id){ const p=PERFIS.find(x=>x.id===id); return p ? p.papel : null; }
+function classePessoa(id){ const pa=papelDe(id); return pa==='gestora'?'pessoa-gestora':pa==='estagiaria'?'pessoa-estagiaria':'pessoa-nenhum'; }
+function mesesEntre(deIso, ateIso){ return [...new Set([deIso.slice(0,7), ateIso.slice(0,7)])]; }
+function contasNoIntervalo(deIso, ateIso){
+  const res=[];
+  for(const c of CONTAS){
+    for(const comp of mesesEntre(deIso, ateIso)){
+      const venc=dataVencimento(comp, c.dia_vencimento);
+      if(venc>=deIso && venc<=ateIso) res.push({ conta:c, venc, pago: !!pagoDe(c.id, comp) });
+    }
+  }
+  return res.sort((a,b)=> a.venc<b.venc?-1:1);
+}
+function itensDoDia(iso){
+  const tarefas=TAREFAS.filter(t=>t.prazo===iso);
+  const contas=CONTAS.filter(c=> dataVencimento(iso.slice(0,7), c.dia_vencimento)===iso);
+  return { tarefas, contas };
+}
+
+function renderInicio(){
+  renderSaudacao(); renderTiles(); renderCalendario(); renderSemana(); renderProximosVenc(); renderHoje();
+}
+
+function renderSaudacao(){
+  const h=+new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo',hour:'2-digit',hour12:false});
+  const s=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  const nome=(EU.nome||'').split(' ')[0]||'';
+  let data=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',timeZone:'America/Sao_Paulo'});
+  data=data.charAt(0).toUpperCase()+data.slice(1);
+  document.getElementById('saudacao').innerHTML=`<h2>${s}, ${escapar(nome)} 👋</h2><p>${data}</p>`;
+}
+
+function renderTiles(){
+  const hoje=hojeISO(), ate=somaDias(hoje,7);
+  const abertas=TAREFAS.filter(t=>t.status!=='concluida');
+  const nHoje=abertas.filter(t=>t.prazo===hoje).length;
+  const nAtr =abertas.filter(t=>t.prazo && t.prazo<hoje).length;
+  const nSem =abertas.filter(t=>t.prazo && t.prazo>hoje && t.prazo<=ate).length;
+  const nVenc=contasNoIntervalo(hoje,ate).filter(x=>!x.pago).length;
+  document.getElementById('tiles').innerHTML=`
+    <div class="tile t-laranja" onclick="irPara('hoje')"><div class="num">${nHoje}</div><div class="rot">📅 Tarefas hoje</div></div>
+    <div class="tile t-vermelho" onclick="irPara('hoje')"><div class="num">${nAtr}</div><div class="rot">⚠️ Atrasadas</div></div>
+    <div class="tile" onclick="verAba('contas')"><div class="num">${nVenc}</div><div class="rot">💰 Contas a vencer</div></div>
+    <div class="tile t-verde" onclick="irPara('semana')"><div class="num">${nSem}</div><div class="rot">🗓️ Na semana</div></div>`;
+}
+function irPara(quando){ verAba('tarefas'); setFiltro('quando', quando); }
+
+/* ---------- Calendário ---------- */
+function renderCalendario(){
+  document.getElementById('cal-label').textContent=nomeMes(calMes);
+  const [a,m]=calMes.split('-').map(Number);
+  const primeiro=new Date(a,m-1,1).getDay();
+  const nd=diasNoMes(calMes);
+  const hoje=hojeISO();
+  const dows=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const ordem={alta:0,media:1,baixa:2};
+  let html=dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<primeiro;i++) html+=`<div class="cal-cell vazia"></div>`;
+  for(let dia=1;dia<=nd;dia++){
+    const iso=`${calMes}-${String(dia).padStart(2,'0')}`;
+    const {tarefas,contas}=itensDoDia(iso);
+    const abertas=tarefas.filter(t=>t.status!=='concluida');
+    const temItens=tarefas.length||contas.length;
+    const prios=[...new Set(abertas.map(t=>t.prioridade))].sort((x,y)=>ordem[x]-ordem[y]);
+    const dots=prios.slice(0,3).map(p=>`<span class="dot ${p}"></span>`).join('');
+    const cnt=abertas.length?`<span class="cal-cnt">${abertas.length}</span>`:'';
+    const money=contas.length?`<span class="cal-money">💰</span>`:'';
+    const cls=['cal-cell']; if(temItens) cls.push('tem'); if(iso===hoje) cls.push('hoje');
+    const hnd=temItens?`onmouseover="abrirDia(event,'${iso}')" onmouseout="fecharPopHover()" onclick="abrirDia(event,'${iso}',true)"`:'';
+    html+=`<div class="${cls.join(' ')}" ${hnd}><span class="dnum">${dia}</span>${cnt}<div class="cal-dots">${dots}</div>${money}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+function calMudarMes(d){ let [a,m]=calMes.split('-').map(Number); m+=d; if(m<1){m=12;a--;} if(m>12){m=1;a++;} calMes=`${a}-${String(m).padStart(2,'0')}`; fecharPop(); renderCalendario(); }
+function calHoje(){ calMes=mesAtual(); fecharPop(); renderCalendario(); }
+
+let popPinned=false;
+function abrirDia(evt, iso, pin){
+  const {tarefas,contas}=itensDoDia(iso);
+  if(!tarefas.length && !contas.length) return;
+  const sE={a_fazer:'◻️',fazendo:'🔵',concluida:'✅'};
+  let h=`<h4>${diaSemanaCurto(iso)}, ${fmtData(iso).slice(0,5)}</h4>`;
+  tarefas.forEach(t=>{
+    h+=`<div class="pitem"><span>${sE[t.status]||'•'}</span><span><b>${escapar(t.titulo)}</b><br><span style="color:#64748b;font-size:12px">${escapar(nomeDe(t.responsavel_id))}${t.cliente?' · '+escapar(t.cliente):''}</span></span></div>`;
+  });
+  contas.forEach(c=>{
+    const pg=pagoDe(c.id, iso.slice(0,7));
+    h+=`<div class="pitem"><span>💰</span><span><b>${escapar(c.empresa)}</b> · ${escapar(c.nome)}<br><span style="color:#64748b;font-size:12px">${fmtMoeda(c.valor_previsto)} · ${pg?'pago ✅':'a pagar'}</span></span></div>`;
+  });
+  const pop=document.getElementById('cal-pop');
+  pop.innerHTML=h; pop.hidden=false;
+  const cell=evt.currentTarget, wrap=pop.parentElement;
+  const popW=pop.offsetWidth, popH=pop.offsetHeight;
+  let left=cell.offsetLeft+cell.offsetWidth+6;
+  if(left+popW>wrap.clientWidth) left=cell.offsetLeft-popW-6;
+  if(left<4) left=4;
+  let top=cell.offsetTop;
+  if(top+popH>wrap.scrollHeight) top=Math.max(4, cell.offsetTop+cell.offsetHeight-popH);
+  pop.style.left=left+'px'; pop.style.top=top+'px';
+  popPinned=!!pin;
+}
+function fecharPop(){ const p=document.getElementById('cal-pop'); if(p) p.hidden=true; popPinned=false; }
+function fecharPopHover(){ if(!popPinned) fecharPop(); }
+
+/* ---------- Fluxo da semana ---------- */
+function renderSemana(){
+  const outro=PERFIS.find(p=>p.id!==EU.id);
+  const nomeOutro=outro?((outro.nome||outro.email||'').split(' ')[0]||'Equipe'):'Equipe';
+  document.getElementById('filtros-semana').innerHTML=
+    [['todos','Todos'],['minhas','Minhas'],['equipe',nomeOutro]]
+    .map(([v,l])=>`<button class="chip ${semanaFiltro===v?'on':''}" onclick="setSemanaFiltro('${v}')">${escapar(l)}</button>`).join('');
+
+  const hoje=hojeISO();
+  const emoP={alta:'🔴',media:'🟠',baixa:'🟢'};
+  let html='';
+  for(let i=0;i<7;i++){
+    const iso=somaDias(hoje,i);
+    let tars=TAREFAS.filter(t=>t.prazo===iso && t.status!=='concluida');
+    if(semanaFiltro==='minhas') tars=tars.filter(t=>t.responsavel_id===EU.id);
+    else if(semanaFiltro==='equipe') tars=tars.filter(t=>t.responsavel_id && t.responsavel_id!==EU.id);
+    const contas=CONTAS.filter(c=> dataVencimento(iso.slice(0,7), c.dia_vencimento)===iso);
+    const chips=tars.map(t=>`<span class="chip-t ${classePessoa(t.responsavel_id)}" onclick="abrirTarefa('${t.id}')" title="${escapar(nomeDe(t.responsavel_id))}">${emoP[t.prioridade]||''} ${escapar(t.titulo)}</span>`).join('')
+      + contas.map(c=>`<span class="chip-t conta">💰 ${escapar(c.empresa)}: ${escapar(c.nome)}</span>`).join('');
+    const total=tars.length+contas.length;
+    html+=`<div class="semana-dia ${iso===hoje?'hoje':''}">
+      <div class="sd-topo">${i===0?'Hoje':diaSemanaCurto(iso)} · ${fmtData(iso).slice(0,5)}<span class="qtd">${total?total+' item(ns)':''}</span></div>
+      ${total?`<div class="chips">${chips}</div>`:'<div class="sd-vazio">Nada agendado</div>'}
+    </div>`;
+  }
+  document.getElementById('semana').innerHTML=html;
+}
+function setSemanaFiltro(v){ semanaFiltro=v; renderSemana(); }
+
+/* ---------- Próximos vencimentos ---------- */
+function renderProximosVenc(){
+  const hoje=hojeISO(), ate=somaDias(hoje,7);
+  const lista=contasNoIntervalo(hoje,ate);
+  const box=document.getElementById('venc-lista');
+  if(!lista.length){ box.innerHTML=`<div class="sd-vazio" style="padding:6px">Nenhuma conta vencendo nos próximos 7 dias. 👍</div>`; return; }
+  box.innerHTML=lista.map(x=>`
+    <div class="mini">
+      <div class="mi-nome">${escapar(x.conta.empresa)} · ${escapar(x.conta.nome)}<small>vence ${fmtData(x.venc)}</small></div>
+      <span class="mi-val">${fmtMoeda(x.conta.valor_previsto)}</span>
+      <span class="mi-tag ${x.pago?'pago':'pend'}">${x.pago?'pago':'a pagar'}</span>
+    </div>`).join('');
+}
+
+/* ---------- Tarefas de hoje ---------- */
+function renderHoje(){
+  const hoje=hojeISO();
+  const lista=TAREFAS.filter(t=>t.prazo===hoje);
+  const box=document.getElementById('hoje-lista');
+  if(!lista.length){ box.innerHTML=`<div class="sd-vazio" style="padding:6px">Sem tarefas para hoje. 🎉</div>`; return; }
+  const pesoP={alta:0,media:1,baixa:2};
+  lista.sort((a,b)=>pesoP[a.prioridade]-pesoP[b.prioridade]);
+  box.innerHTML=lista.map(t=>cardTarefa(t,hoje)).join('');
+}
+
 /* ---------- utilidades ---------- */
 function fechar(idModal){ document.getElementById(idModal).classList.remove('show'); }
 document.querySelectorAll('.modal-bg').forEach(bg=>{
   bg.addEventListener('click', e=>{ if(e.target===bg) bg.classList.remove('show'); });
+});
+// fecha o balão do calendário ao clicar/tocar fora dele
+document.addEventListener('click', e=>{
+  if(popPinned && !e.target.closest('.cal-cell') && !e.target.closest('.cal-pop')) fecharPop();
 });
 
 /* ---------- inicia (mantém login salvo) ---------- */
