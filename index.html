@@ -470,9 +470,13 @@ async function iniciar(){
   document.getElementById('me-nome').textContent = EU.nome || user.email;
   document.getElementById('me-papel').textContent = EU.papel === 'gestora' ? 'Gestora' : 'Estagiária';
 
-  // preenche dropdown de responsável
+  // preenche dropdown de responsável (estagiária só pode criar para si mesma)
   const sel = document.getElementById('t-responsavel');
-  sel.innerHTML = PERFIS.map(p => `<option value="${p.id}">${p.nome||p.email||'—'}</option>`).join('');
+  const listaResp = EU.papel==='gestora' ? PERFIS : PERFIS.filter(p=>p.id===EU.id);
+  sel.innerHTML = listaResp.map(p => `<option value="${p.id}">${p.nome||p.email||'—'}</option>`).join('');
+
+  // estagiária não precisa do filtro "Minhas/Da equipe" (só vê as dela)
+  if(EU.papel!=='gestora') document.getElementById('filtros-quem').style.display='none';
 
   await carregarTudo();
 }
@@ -1076,11 +1080,14 @@ function fecharPopHover(){ if(!popPinned) fecharPop(); }
 
 /* ---------- Fluxo da semana ---------- */
 function renderSemana(){
-  const outro=PERFIS.find(p=>p.id!==EU.id);
-  const nomeOutro=outro?((outro.nome||outro.email||'').split(' ')[0]||'Equipe'):'Equipe';
-  document.getElementById('filtros-semana').innerHTML=
-    [['todos','Todos'],['minhas','Minhas'],['equipe',nomeOutro]]
-    .map(([v,l])=>`<button class="chip ${semanaFiltro===v?'on':''}" onclick="setSemanaFiltro('${v}')">${escapar(l)}</button>`).join('');
+  const fbox=document.getElementById('filtros-semana');
+  if(EU.papel!=='gestora'){ fbox.innerHTML=''; semanaFiltro='todos'; }  // estagiária só vê as dela
+  else {
+    const outro=PERFIS.find(p=>p.id!==EU.id);
+    const nomeOutro=outro?((outro.nome||outro.email||'').split(' ')[0]||'Equipe'):'Equipe';
+    fbox.innerHTML=[['todos','Todos'],['minhas','Minhas'],['equipe',nomeOutro]]
+      .map(([v,l])=>`<button class="chip ${semanaFiltro===v?'on':''}" onclick="setSemanaFiltro('${v}')">${escapar(l)}</button>`).join('');
+  }
 
   const hoje=hojeISO();
   const emoP={alta:'🔴',media:'🟠',baixa:'🟢'};
