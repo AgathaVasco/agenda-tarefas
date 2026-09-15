@@ -1,7 +1,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nossa Agenda — Sallus</title>
+<title>Nossa Agenda — Conflex</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
     --azul:#2563eb; --azul-esc:#1e40af; --bg:#f1f5f9; --card:#ffffff;
@@ -98,6 +99,12 @@
   .btn-pagar{background:#059669;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap}
   .btn-pagar:hover{background:#047857}
   .btn-pago{background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+  .pagar-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--linha);border-left:4px solid var(--media);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:var(--sombra);flex-wrap:wrap}
+  .pagar-item.pago{border-left-color:var(--baixa);opacity:.75}
+  .pagar-item .pi-nome{flex:1;min-width:130px;font-weight:600}
+  .pagar-item .pi-nome small{display:block;font-weight:400;color:var(--txt2);font-size:12px}
+  .ver-boleto{font-size:12px;color:var(--azul);text-decoration:none;border:1px solid var(--linha);border-radius:7px;padding:5px 9px;white-space:nowrap}
+  .ver-boleto:hover{background:#eff6ff}
 
   /* ---------- TELA INÍCIO ---------- */
   .saudacao{margin-bottom:14px}
@@ -183,7 +190,7 @@
 <div id="login">
   <div class="login-box">
     <h1>Nossa Agenda</h1>
-    <p>Sallus Assessoria Contábil</p>
+    <p>Conflex Assessoria Contábil</p>
     <div class="campo"><label>E-mail</label><input id="lg-email" type="email" autocomplete="username"></div>
     <div class="campo"><label>Senha</label><input id="lg-senha" type="password" autocomplete="current-password"></div>
     <button class="btn" onclick="entrar()">Entrar</button>
@@ -258,18 +265,39 @@
     <div id="lista-tarefas"></div>
   </div>
 
-  <!-- ABA CONTAS FIXAS -->
+  <!-- ABA CONTAS -->
   <div class="conteudo" id="aba-contas" style="display:none">
-    <div class="barra">
-      <div class="mes-nav">
-        <button class="icon-btn" onclick="mudarMes(-1)">◀</button>
-        <span id="mes-label"></span>
-        <button class="icon-btn" onclick="mudarMes(1)">▶</button>
-      </div>
-      <button class="add" onclick="abrirConta()">+ Nova conta</button>
+    <div class="filtros" style="margin-bottom:14px">
+      <button id="sub-btn-fixas" class="chip on" onclick="verSubConta('fixas')">🔁 Fixas</button>
+      <button id="sub-btn-pagar" class="chip" onclick="verSubConta('pagar')">📄 A Pagar</button>
     </div>
-    <div id="resumo-contas"></div>
-    <div id="lista-contas"></div>
+
+    <!-- Sub-seção: Contas Fixas -->
+    <div id="sub-fixas">
+      <div class="barra">
+        <div class="mes-nav">
+          <button class="icon-btn" onclick="mudarMes(-1)">◀</button>
+          <span id="mes-label"></span>
+          <button class="icon-btn" onclick="mudarMes(1)">▶</button>
+        </div>
+        <button class="add" onclick="abrirConta()">+ Nova conta</button>
+      </div>
+      <div id="resumo-contas"></div>
+      <div id="lista-contas"></div>
+    </div>
+
+    <!-- Sub-seção: Contas a Pagar (boletos) -->
+    <div id="sub-pagar" style="display:none">
+      <div class="barra">
+        <div class="filtros" id="filtros-pagar">
+          <button class="chip on" data-p="aberto" onclick="setFiltroPagar('aberto')">Em aberto</button>
+          <button class="chip" data-p="pagas" onclick="setFiltroPagar('pagas')">Pagas</button>
+          <button class="chip" data-p="todas" onclick="setFiltroPagar('todas')">Todas</button>
+        </div>
+        <button class="add" onclick="abrirBoleto()">+ Anexar boleto</button>
+      </div>
+      <div id="lista-pagar"></div>
+    </div>
   </div>
 
   <!-- ABA ANOTAÇÕES -->
@@ -374,6 +402,54 @@
   </div>
 </div>
 
+<!-- ============ MODAL ANEXAR BOLETO / CONTA A PAGAR ============ -->
+<div class="modal-bg" id="modal-boleto">
+  <div class="modal">
+    <h2 id="mb-titulo">Anexar boleto</h2>
+    <input type="hidden" id="b-id">
+    <input type="hidden" id="b-arquivo">
+    <input type="hidden" id="b-linha">
+    <div class="campo">
+      <label>Boleto (PDF ou foto)</label>
+      <input id="b-arquivo-input" type="file" accept="application/pdf,image/*" onchange="aoEscolherArquivo(event)">
+      <div id="b-status" style="font-size:13px;color:var(--txt2);margin-top:6px"></div>
+      <div id="b-atual" style="font-size:13px;margin-top:6px"></div>
+    </div>
+    <div class="campo"><label>Beneficiário (quem recebe)</label><input id="b-beneficiario" placeholder="Ex: Imobiliária Silva"></div>
+    <div class="linha2">
+      <div class="campo"><label>Valor (R$)</label><input id="b-valor" type="number" step="0.01" min="0"></div>
+      <div class="campo"><label>Vencimento</label><input id="b-vencimento" type="date"></div>
+    </div>
+    <div class="linha2">
+      <div class="campo"><label>Empresa</label><input id="b-empresa" list="lista-empresas" placeholder="De qual empresa"></div>
+      <div class="campo"><label>Descrição (opcional)</label><input id="b-descricao" placeholder="Ex: Aluguel sala 2"></div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-sec" onclick="fechar('modal-boleto')">Cancelar</button>
+      <button class="btn" id="mb-salvar" onclick="salvarBoleto()">Salvar</button>
+    </div>
+    <button class="btn btn-sec" id="mb-apagar" style="margin-top:10px;color:var(--alta)" onclick="apagarBoleto()">Excluir lançamento</button>
+  </div>
+</div>
+
+<!-- ============ MODAL PAGAR BOLETO ============ -->
+<div class="modal-bg" id="modal-pagar-boleto">
+  <div class="modal">
+    <h2>Registrar pagamento</h2>
+    <input type="hidden" id="pgb-id">
+    <p id="pgb-info" style="color:var(--txt2);font-size:14px;margin:-8px 0 16px"></p>
+    <div class="linha2">
+      <div class="campo"><label>Valor pago (R$)</label><input id="pgb-valor" type="number" step="0.01" min="0"></div>
+      <div class="campo"><label>Data do pagamento</label><input id="pgb-data" type="date"></div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn btn-sec" onclick="fechar('modal-pagar-boleto')">Cancelar</button>
+      <button class="btn" onclick="salvarPagarBoleto()">Confirmar pagamento</button>
+    </div>
+    <button class="btn btn-sec" id="pgb-desfazer" style="margin-top:10px;color:var(--alta);display:none" onclick="desfazerPagarBoleto()">Marcar como NÃO paga</button>
+  </div>
+</div>
+
 <datalist id="lista-clientes"></datalist>
 <datalist id="lista-empresas"></datalist>
 <div class="toast" id="toast"></div>
@@ -400,6 +476,12 @@ let filtros = { quando:'hoje', quem:'todos' };
 let mesSel = null;      // competência selecionada nas Contas Fixas (AAAA-MM)
 let calMes = null;      // mês exibido no calendário do Início
 let semanaFiltro = 'todos'; // filtro do fluxo da semana
+let CONTAS_PAGAR = [];  // boletos/faturas a pagar (avulsos)
+let filtroPagar = 'aberto';
+let subConta = 'fixas';
+
+// configura o leitor de PDF dos boletos
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 /* ---------- Datas ---------- */
 function hojeISO(){
@@ -484,22 +566,25 @@ async function iniciar(){
 async function carregarTudo(){
   if(!mesSel) mesSel = mesAtual();
   if(!calMes) calMes = mesAtual();
-  const [{ data:t }, { data:n }, { data:c }, { data:pg }] = await Promise.all([
+  const [{ data:t }, { data:n }, { data:c }, { data:pg }, { data:cp }] = await Promise.all([
     sb.from('tarefas').select('*').order('prazo', {nullsFirst:false}).order('prioridade'),
     sb.from('notas').select('*').order('atualizado_em', {ascending:false}),
     sb.from('contas_fixas').select('*').order('dia_vencimento'),
-    sb.from('pagamentos').select('*')
+    sb.from('pagamentos').select('*'),
+    sb.from('contas_pagar').select('*').order('vencimento')
   ]);
   TAREFAS = t || [];
   NOTAS = n || [];
   CONTAS = c || [];
   PAG_ALL = pg || [];
   PAGAMENTOS = PAG_ALL.filter(p=>p.competencia===mesSel);
+  CONTAS_PAGAR = cp || [];
   atualizarClientes();
   renderInicio();
   renderTarefas();
   renderNotas();
   renderContas();
+  renderPagar();
 }
 function pagoDe(contaId, comp){ return PAG_ALL.find(p=>p.conta_fixa_id===contaId && p.competencia===comp) || null; }
 
@@ -990,7 +1075,8 @@ function contasNoIntervalo(deIso, ateIso){
 function itensDoDia(iso){
   const tarefas=TAREFAS.filter(t=>t.prazo===iso);
   const contas=CONTAS.filter(c=> dataVencimento(iso.slice(0,7), c.dia_vencimento)===iso);
-  return { tarefas, contas };
+  const pagar=CONTAS_PAGAR.filter(p=>p.vencimento===iso);
+  return { tarefas, contas, pagar };
 }
 
 function renderInicio(){
@@ -1012,7 +1098,8 @@ function renderTiles(){
   const nHoje=abertas.filter(t=>t.prazo===hoje).length;
   const nAtr =abertas.filter(t=>t.prazo && t.prazo<hoje).length;
   const nSem =abertas.filter(t=>t.prazo && t.prazo>hoje && t.prazo<=ate).length;
-  const nVenc=contasNoIntervalo(hoje,ate).filter(x=>!x.pago).length;
+  const nVenc=contasNoIntervalo(hoje,ate).filter(x=>!x.pago).length
+            + CONTAS_PAGAR.filter(p=>p.vencimento && p.vencimento>=hoje && p.vencimento<=ate && !p.pago).length;
   document.getElementById('tiles').innerHTML=`
     <div class="tile t-laranja" onclick="irPara('hoje')"><div class="num">${nHoje}</div><div class="rot">📅 Tarefas hoje</div></div>
     <div class="tile t-vermelho" onclick="irPara('hoje')"><div class="num">${nAtr}</div><div class="rot">⚠️ Atrasadas</div></div>
@@ -1034,13 +1121,13 @@ function renderCalendario(){
   for(let i=0;i<primeiro;i++) html+=`<div class="cal-cell vazia"></div>`;
   for(let dia=1;dia<=nd;dia++){
     const iso=`${calMes}-${String(dia).padStart(2,'0')}`;
-    const {tarefas,contas}=itensDoDia(iso);
+    const {tarefas,contas,pagar}=itensDoDia(iso);
     const abertas=tarefas.filter(t=>t.status!=='concluida');
-    const temItens=tarefas.length||contas.length;
+    const temItens=tarefas.length||contas.length||pagar.length;
     const prios=[...new Set(abertas.map(t=>t.prioridade))].sort((x,y)=>ordem[x]-ordem[y]);
     const dots=prios.slice(0,3).map(p=>`<span class="dot ${p}"></span>`).join('');
     const cnt=abertas.length?`<span class="cal-cnt">${abertas.length}</span>`:'';
-    const money=contas.length?`<span class="cal-money">💰</span>`:'';
+    const money=(contas.length||pagar.length)?`<span class="cal-money">💰</span>`:'';
     const cls=['cal-cell']; if(temItens) cls.push('tem'); if(iso===hoje) cls.push('hoje');
     const hnd=temItens?`onmouseover="abrirDia(event,'${iso}')" onmouseout="fecharPopHover()" onclick="abrirDia(event,'${iso}',true)"`:'';
     html+=`<div class="${cls.join(' ')}" ${hnd}><span class="dnum">${dia}</span>${cnt}<div class="cal-dots">${dots}</div>${money}</div>`;
@@ -1052,8 +1139,8 @@ function calHoje(){ calMes=mesAtual(); fecharPop(); renderCalendario(); }
 
 let popPinned=false;
 function abrirDia(evt, iso, pin){
-  const {tarefas,contas}=itensDoDia(iso);
-  if(!tarefas.length && !contas.length) return;
+  const {tarefas,contas,pagar}=itensDoDia(iso);
+  if(!tarefas.length && !contas.length && !pagar.length) return;
   const sE={a_fazer:'◻️',fazendo:'🔵',concluida:'✅'};
   let h=`<h4>${diaSemanaCurto(iso)}, ${fmtData(iso).slice(0,5)}</h4>`;
   tarefas.forEach(t=>{
@@ -1062,6 +1149,9 @@ function abrirDia(evt, iso, pin){
   contas.forEach(c=>{
     const pg=pagoDe(c.id, iso.slice(0,7));
     h+=`<div class="pitem"><span>💰</span><span><b>${escapar(c.empresa)}</b> · ${escapar(c.nome)}<br><span style="color:#64748b;font-size:12px">${fmtMoeda(c.valor_previsto)} · ${pg?'pago ✅':'a pagar'}</span></span></div>`;
+  });
+  pagar.forEach(p=>{
+    h+=`<div class="pitem"><span>📄</span><span><b>${escapar(p.beneficiario||p.descricao||'Boleto')}</b>${p.empresa?' · '+escapar(p.empresa):''}<br><span style="color:#64748b;font-size:12px">${fmtMoeda(p.valor)} · ${p.pago?'pago ✅':'a pagar'}</span></span></div>`;
   });
   const pop=document.getElementById('cal-pop');
   pop.innerHTML=h; pop.hidden=false;
@@ -1098,9 +1188,11 @@ function renderSemana(){
     if(semanaFiltro==='minhas') tars=tars.filter(t=>t.responsavel_id===EU.id);
     else if(semanaFiltro==='equipe') tars=tars.filter(t=>t.responsavel_id && t.responsavel_id!==EU.id);
     const contas=CONTAS.filter(c=> dataVencimento(iso.slice(0,7), c.dia_vencimento)===iso);
+    const pagar=CONTAS_PAGAR.filter(p=>p.vencimento===iso);
     const chips=tars.map(t=>`<span class="chip-t ${classePessoa(t.responsavel_id)}" onclick="abrirTarefa('${t.id}')" title="${escapar(nomeDe(t.responsavel_id))}">${emoP[t.prioridade]||''} ${escapar(t.titulo)}</span>`).join('')
-      + contas.map(c=>`<span class="chip-t conta">💰 ${escapar(c.empresa)}: ${escapar(c.nome)}</span>`).join('');
-    const total=tars.length+contas.length;
+      + contas.map(c=>`<span class="chip-t conta">💰 ${escapar(c.empresa)}: ${escapar(c.nome)}</span>`).join('')
+      + pagar.map(p=>`<span class="chip-t conta">📄 ${escapar(p.beneficiario||p.descricao||'Boleto')}</span>`).join('');
+    const total=tars.length+contas.length+pagar.length;
     html+=`<div class="semana-dia ${iso===hoje?'hoje':''}">
       <div class="sd-topo">${i===0?'Hoje':diaSemanaCurto(iso)} · ${fmtData(iso).slice(0,5)}<span class="qtd">${total?total+' item(ns)':''}</span></div>
       ${total?`<div class="chips">${chips}</div>`:'<div class="sd-vazio">Nada agendado</div>'}
@@ -1113,13 +1205,16 @@ function setSemanaFiltro(v){ semanaFiltro=v; renderSemana(); }
 /* ---------- Próximos vencimentos ---------- */
 function renderProximosVenc(){
   const hoje=hojeISO(), ate=somaDias(hoje,7);
-  const lista=contasNoIntervalo(hoje,ate);
+  const fixas=contasNoIntervalo(hoje,ate).map(x=>({nome:`${x.conta.empresa} · ${x.conta.nome}`, valor:x.conta.valor_previsto, venc:x.venc, pago:x.pago, icone:'🔁'}));
+  const pagar=CONTAS_PAGAR.filter(p=>p.vencimento && p.vencimento>=hoje && p.vencimento<=ate)
+    .map(p=>({nome:`${p.beneficiario||p.descricao||'Boleto'}${p.empresa?' · '+p.empresa:''}`, valor:p.valor, venc:p.vencimento, pago:p.pago, icone:'📄'}));
+  const lista=[...fixas,...pagar].sort((a,b)=> a.venc<b.venc?-1:1);
   const box=document.getElementById('venc-lista');
   if(!lista.length){ box.innerHTML=`<div class="sd-vazio" style="padding:6px">Nenhuma conta vencendo nos próximos 7 dias. 👍</div>`; return; }
   box.innerHTML=lista.map(x=>`
     <div class="mini">
-      <div class="mi-nome">${escapar(x.conta.empresa)} · ${escapar(x.conta.nome)}<small>vence ${fmtData(x.venc)}</small></div>
-      <span class="mi-val">${fmtMoeda(x.conta.valor_previsto)}</span>
+      <div class="mi-nome">${x.icone} ${escapar(x.nome)}<small>vence ${fmtData(x.venc)}</small></div>
+      <span class="mi-val">${fmtMoeda(x.valor)}</span>
       <span class="mi-tag ${x.pago?'pago':'pend'}">${x.pago?'pago':'a pagar'}</span>
     </div>`).join('');
 }
@@ -1133,6 +1228,214 @@ function renderHoje(){
   const pesoP={alta:0,media:1,baixa:2};
   lista.sort((a,b)=>pesoP[a.prioridade]-pesoP[b.prioridade]);
   box.innerHTML=lista.map(t=>cardTarefa(t,hoje)).join('');
+}
+
+/* ============================================================
+   CONTAS A PAGAR (boletos avulsos)
+   ============================================================ */
+function verSubConta(qual){
+  subConta=qual;
+  document.getElementById('sub-fixas').style.display = qual==='fixas'?'block':'none';
+  document.getElementById('sub-pagar').style.display = qual==='pagar'?'block':'none';
+  document.getElementById('sub-btn-fixas').classList.toggle('on', qual==='fixas');
+  document.getElementById('sub-btn-pagar').classList.toggle('on', qual==='pagar');
+}
+function setFiltroPagar(v){
+  filtroPagar=v;
+  document.querySelectorAll('#filtros-pagar .chip').forEach(c=>c.classList.toggle('on', c.dataset.p===v));
+  renderPagar();
+}
+
+function renderPagar(){
+  const box=document.getElementById('lista-pagar');
+  let lista=CONTAS_PAGAR.slice();
+  if(filtroPagar==='aberto') lista=lista.filter(p=>!p.pago);
+  else if(filtroPagar==='pagas') lista=lista.filter(p=>p.pago);
+  lista.sort((a,b)=> (a.vencimento||'9999')<(b.vencimento||'9999')?-1:1);
+  if(!lista.length){ box.innerHTML=`<div class="vazio"><div class="em">📄</div>Nenhum boleto aqui.<br>Clique em <b>+ Anexar boleto</b> para adicionar.</div>`; return; }
+  const hoje=hojeISO();
+  box.innerHTML=lista.map(p=>{
+    let badge='';
+    if(p.pago) badge=`<span class="venc paga">✅ Pago ${p.pago_em?'· '+fmtData(p.pago_em):''}</span>`;
+    else if(p.vencimento){
+      const d=diffDias(hoje,p.vencimento);
+      if(d<0)      badge=`<span class="venc vencida">⚠ Vencida · ${fmtData(p.vencimento)}</span>`;
+      else if(d===0) badge=`<span class="venc hoje">📅 Vence hoje</span>`;
+      else if(d<=3) badge=`<span class="venc breve">⏰ Vence em ${d} dia${d>1?'s':''}</span>`;
+      else         badge=`<span class="venc">Vence ${fmtData(p.vencimento)}</span>`;
+    }
+    const acao=p.pago
+      ? `<button class="btn-pago" onclick="abrirPagarBoleto('${p.id}')">${fmtMoeda(p.valor_pago)} ✓</button>`
+      : `<button class="btn-pagar" onclick="abrirPagarBoleto('${p.id}')">Pagar</button>`;
+    const verArq=p.arquivo_path?`<a class="ver-boleto" href="#" onclick="verBoleto(event,'${p.id}')">📎 boleto</a>`:'';
+    return `<div class="pagar-item ${p.pago?'pago':''}">
+      <div class="pi-nome">${escapar(p.beneficiario||p.descricao||'(sem nome)')}${p.empresa?`<small>🏢 ${escapar(p.empresa)}</small>`:''}</div>
+      ${badge}
+      <span class="c-valor">${fmtMoeda(p.valor)}</span>
+      ${verArq}
+      ${acao}
+      <button class="icon-btn" title="Editar" onclick="abrirBoleto('${p.id}')">✏️</button>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Ler o PDF do boleto ---------- */
+async function lerBoletoPDF(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let texto='';
+  for(let i=1;i<=pdf.numPages;i++){ const pg=await pdf.getPage(i); const tc=await pg.getTextContent(); texto+=' '+tc.items.map(it=>it.str).join(' '); }
+  return texto;
+}
+function vencimentoDoFator(fator){
+  const f=parseInt(fator,10);
+  if(!f) return null;
+  let ms=Date.UTC(1997,9,7)+f*86400000;
+  if(ms < Date.UTC(2025,1,22)) ms=Date.UTC(2025,1,22)+(f-1000)*86400000; // novo ciclo FEBRABAN
+  return new Date(ms).toISOString().slice(0,10);
+}
+function extrairDadosBoleto(texto){
+  const re=/(\d{5})[.\s]?(\d{5})\s+(\d{5})[.\s]?(\d{6})\s+(\d{5})[.\s]?(\d{6})\s+(\d)\s+(\d{14})/;
+  const m=texto.match(re);
+  if(!m) return null;
+  const l=m[1]+m[2]+m[3]+m[4]+m[5]+m[6]+m[7]+m[8]; // 47 dígitos
+  const fator=l.substr(33,4), valor10=l.substr(37,10);
+  const valor=parseInt(valor10,10)/100;
+  return { linha:`${m[1]}.${m[2]} ${m[3]}.${m[4]} ${m[5]}.${m[6]} ${m[7]} ${m[8]}`,
+           valor: valor>0?valor:null, vencimento: vencimentoDoFator(fator) };
+}
+
+/* ---------- Modal anexar / editar ---------- */
+function abrirBoleto(id){
+  const p=id?CONTAS_PAGAR.find(x=>x.id===id):null;
+  document.getElementById('mb-titulo').textContent=p?'Editar lançamento':'Anexar boleto';
+  document.getElementById('b-id').value=p?p.id:'';
+  document.getElementById('b-arquivo').value=p?(p.arquivo_path||''):'';
+  document.getElementById('b-linha').value=p?(p.linha_digitavel||''):'';
+  document.getElementById('b-beneficiario').value=p?(p.beneficiario||''):'';
+  document.getElementById('b-valor').value=p?(p.valor??''):'';
+  document.getElementById('b-vencimento').value=p?(p.vencimento||''):'';
+  document.getElementById('b-empresa').value=p?(p.empresa||''):'';
+  document.getElementById('b-descricao').value=p?(p.descricao||''):'';
+  document.getElementById('b-arquivo-input').value='';
+  document.getElementById('b-status').textContent='';
+  document.getElementById('b-atual').innerHTML=(p&&p.arquivo_path)
+    ? `📎 Boleto já anexado (<a href="#" onclick="verBoleto(event,'${p.id}')">ver</a>). Para trocar, escolha outro arquivo acima.` : '';
+  document.getElementById('mb-apagar').style.display=p?'block':'none';
+  window._novoArquivo=null;
+  document.getElementById('modal-boleto').classList.add('show');
+}
+
+async function aoEscolherArquivo(e){
+  const file=e.target.files[0];
+  window._novoArquivo=file||null;
+  const status=document.getElementById('b-status');
+  if(!file){ status.textContent=''; return; }
+  if(file.type==='application/pdf' && window.pdfjsLib){
+    status.textContent='📖 Lendo o boleto...';
+    try{
+      const dados=extrairDadosBoleto(await lerBoletoPDF(file));
+      if(dados && (dados.valor||dados.vencimento)){
+        if(dados.valor) document.getElementById('b-valor').value=dados.valor;
+        if(dados.vencimento) document.getElementById('b-vencimento').value=dados.vencimento;
+        if(dados.linha) document.getElementById('b-linha').value=dados.linha;
+        status.innerHTML='✅ Li o boleto! <b>Confira</b> o valor e o vencimento abaixo.';
+      } else {
+        status.innerHTML='ℹ️ Não encontrei o código de barras neste PDF. Preencha valor e vencimento à mão.';
+      }
+    }catch(err){ console.error(err); status.textContent='ℹ️ Não consegui ler automaticamente. Preencha à mão.'; }
+  } else {
+    status.textContent='🖼️ Arquivo anexado. Preencha valor e vencimento à mão.';
+  }
+}
+
+async function salvarBoleto(){
+  const id=document.getElementById('b-id').value;
+  const benef=document.getElementById('b-beneficiario').value.trim();
+  const desc=document.getElementById('b-descricao').value.trim();
+  const venc=document.getElementById('b-vencimento').value;
+  if(!benef && !desc){ toast('Diga o beneficiário ou uma descrição 🙂'); return; }
+  if(!venc){ toast('Informe o vencimento'); return; }
+  const btn=document.getElementById('mb-salvar'); btn.disabled=true; btn.textContent='Salvando...';
+  try{
+    let arquivo_path=document.getElementById('b-arquivo').value||null;
+    const file=window._novoArquivo;
+    if(file){
+      const ext=(file.name.split('.').pop()||'dat').toLowerCase();
+      const path=`${EU.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+      const { error:upErr }=await sb.storage.from('boletos').upload(path, file, {contentType:file.type||undefined});
+      if(upErr) throw upErr;
+      arquivo_path=path;
+    }
+    const valorRaw=document.getElementById('b-valor').value;
+    const dados={
+      beneficiario: benef||null,
+      valor: valorRaw===''?null:Number(valorRaw),
+      vencimento: venc,
+      empresa: document.getElementById('b-empresa').value.trim()||null,
+      descricao: desc||null,
+      linha_digitavel: document.getElementById('b-linha').value||null,
+      arquivo_path
+    };
+    let error;
+    if(id){ ({ error }=await sb.from('contas_pagar').update(dados).eq('id', id)); }
+    else { dados.criado_por=EU.id; ({ error }=await sb.from('contas_pagar').insert(dados)); }
+    if(error) throw error;
+    fechar('modal-boleto');
+    await carregarTudo();
+    verSubConta('pagar');
+    toast(id?'Lançamento atualizado!':'Boleto lançado! ✅');
+  }catch(err){ console.error(err); toast('Erro ao salvar 😕'); }
+  finally{ btn.disabled=false; btn.textContent='Salvar'; }
+}
+
+async function verBoleto(e,id){
+  if(e) e.preventDefault();
+  const p=CONTAS_PAGAR.find(x=>x.id===id);
+  if(!p||!p.arquivo_path){ toast('Sem arquivo anexado.'); return; }
+  const { data, error }=await sb.storage.from('boletos').createSignedUrl(p.arquivo_path, 300);
+  if(error||!data){ toast('Não consegui abrir o boleto.'); return; }
+  window.open(data.signedUrl,'_blank');
+}
+
+async function apagarBoleto(){
+  const id=document.getElementById('b-id').value;
+  if(!id) return;
+  if(!confirm('Excluir este lançamento? O boleto anexado também será removido.')) return;
+  const p=CONTAS_PAGAR.find(x=>x.id===id);
+  if(p&&p.arquivo_path){ try{ await sb.storage.from('boletos').remove([p.arquivo_path]); }catch(e){} }
+  await sb.from('contas_pagar').delete().eq('id', id);
+  fechar('modal-boleto');
+  await carregarTudo();
+  toast('Lançamento excluído.');
+}
+
+/* ---------- Pagar boleto ---------- */
+function abrirPagarBoleto(id){
+  const p=CONTAS_PAGAR.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('pgb-id').value=id;
+  document.getElementById('pgb-info').textContent=`${p.beneficiario||p.descricao||'Boleto'}${p.empresa?' · '+p.empresa:''}`;
+  document.getElementById('pgb-valor').value=p.pago?(p.valor_pago??''):(p.valor??'');
+  document.getElementById('pgb-data').value=p.pago?(p.pago_em||hojeISO()):hojeISO();
+  document.getElementById('pgb-desfazer').style.display=p.pago?'block':'none';
+  document.getElementById('modal-pagar-boleto').classList.add('show');
+}
+async function salvarPagarBoleto(){
+  const id=document.getElementById('pgb-id').value;
+  const v=document.getElementById('pgb-valor').value;
+  await sb.from('contas_pagar').update({ pago:true, valor_pago:v===''?null:Number(v), pago_em:document.getElementById('pgb-data').value||hojeISO() }).eq('id', id);
+  fechar('modal-pagar-boleto');
+  await carregarTudo();
+  toast('Pagamento registrado! ✅');
+}
+async function desfazerPagarBoleto(){
+  const id=document.getElementById('pgb-id').value;
+  if(!confirm('Marcar como NÃO paga?')) return;
+  await sb.from('contas_pagar').update({ pago:false, valor_pago:null, pago_em:null }).eq('id', id);
+  fechar('modal-pagar-boleto');
+  await carregarTudo();
+  toast('Marcada como não paga.');
 }
 
 /* ---------- utilidades ---------- */

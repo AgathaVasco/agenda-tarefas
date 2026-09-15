@@ -88,6 +88,19 @@ Deno.serve(async () => {
     else if (d === 0) cHoje.push(item);
     else if (d <= (c.avisar_dias_antes ?? 3)) cBreve.push(item);
   }
+
+  // boletos avulsos (Contas a Pagar) ainda não pagos, vencendo até amanhã
+  const { data: aPagar } = await supabase
+    .from("contas_pagar").select("*")
+    .eq("pago", false).not("vencimento", "is", null).lte("vencimento", amanha);
+  for (const p of aPagar ?? []) {
+    const item = `<li style="margin:6px 0"><b>${p.beneficiario || p.descricao || "Boleto"}</b>` +
+      `${p.empresa ? ` — ${p.empresa}` : ""}${moeda(p.valor)} <span style="color:#64748b">(vence ${fmt(p.vencimento)})</span></li>`;
+    const d = diffDias(hoje, p.vencimento);
+    if (d < 0) cVencidas.push(item);
+    else if (d === 0) cHoje.push(item);
+    else cBreve.push(item);
+  }
   const totalContas = cVencidas.length + cHoje.length + cBreve.length;
   const fixasHtml =
     bloco("💰 Contas vencidas (não pagas)", "#dc2626", cVencidas) +
@@ -142,7 +155,7 @@ Deno.serve(async () => {
           ${tarefasHtml || (totalTarefas === 0 ? '<p style="color:#64748b;font-size:14px;margin:14px 0 0">Nenhuma tarefa para hoje. 🎉</p>' : "")}
           ${fixasHtml}
           <p style="margin:22px 0 0;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px">
-            Enviado automaticamente pela Nossa Agenda · Sallus
+            Enviado automaticamente pela Nossa Agenda · Conflex
           </p>
         </div>
       </div>`;

@@ -1,6 +1,6 @@
 # 📋 Agenda & Tarefas — Guia do Projeto
 
-App de agenda com **lembretes por e-mail** + **controle de tarefas da estagiária** + **anotações compartilhadas de clientes**, para a Sallus Assessoria Contábil.
+App de agenda com **lembretes por e-mail** + **controle de tarefas da estagiária** + **anotações compartilhadas de clientes**, para a Conflex Assessoria Contábil.
 
 É parecido com o seu app Acelera Cartões: um arquivo `index.html`, banco no **Supabase**, publicado no **GitHub Pages**. A novidade é um "robô" no Supabase que envia os e-mails sozinho.
 
