@@ -1302,6 +1302,26 @@ function soValor(txt){
   const m=txt.match(/valor\s*(?:a\s*pagar|do\s*documento|do\s*doc)?[^0-9]{0,15}R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/i);
   return m ? parseFloat(m[1].replace(/\./g,'').replace(',','.')) : null;
 }
+function dedupNome(nome){
+  const w=nome.split(' ').filter(Boolean); const n=w.length;
+  for(let k=Math.floor(n/2);k>=2;k--){
+    if(w.slice(0,k).join(' ').toLowerCase()===w.slice(k,2*k).join(' ').toLowerCase())
+      return w.slice(0,k).concat(w.slice(2*k)).join(' ');
+  }
+  return nome;
+}
+function extrairBeneficiario(texto){
+  // pega até 5 palavras (em CAIXA ALTA) imediatamente antes de um sufixo jurídico
+  const m=texto.match(/((?:[A-ZÀ-Ú][A-ZÀ-Ú0-9&.\-\/]*\s+){1,5})(LTDA|EIRELI|MEI|S\/A|S\.?A\.?|ME)\b/);
+  if(m){
+    const nome=(m[1]+m[2]).replace(/\s+/g,' ').trim();
+    if(nome.length>=4) return nome;
+  }
+  // reforço: logo após o rótulo "Beneficiário"/"Cedente"
+  const m2=texto.match(/(?:benefici[aá]rio|cedente)\s*:?\s+([A-Za-zÀ-ú][\wÀ-ú&.\-\/ ]{4,60})/i);
+  if(m2){ let n=dedupNome(m2[1].replace(/\s+/g,' ').trim()).split(/\s(?:vencimento|valor|nosso|ag[eê]ncia|documento|emiss)/i)[0].trim(); if(n.length>=4) return n; }
+  return null;
+}
 function extrairDadosBoleto(texto){
   let valor=null, vencimento=null, linha=null;
   // 1) código de barras / linha digitável (com OU sem pontos e espaços)
@@ -1322,8 +1342,9 @@ function extrairDadosBoleto(texto){
   // 2) reforço: pega do texto impresso o que ainda faltar
   if(valor===null) valor=soValor(texto);
   if(!vencimento) vencimento=soDataVenc(texto);
-  if(valor===null && !vencimento && !linha) return null;
-  return { linha, valor, vencimento };
+  const beneficiario=extrairBeneficiario(texto);
+  if(valor===null && !vencimento && !linha && !beneficiario) return null;
+  return { linha, valor, vencimento, beneficiario };
 }
 
 /* ---------- Modal anexar / editar ---------- */
@@ -1356,11 +1377,13 @@ async function aoEscolherArquivo(e){
     status.textContent='📖 Lendo o boleto...';
     try{
       const dados=extrairDadosBoleto(await lerBoletoPDF(file));
-      if(dados && (dados.valor||dados.vencimento)){
+      if(dados && (dados.valor||dados.vencimento||dados.beneficiario)){
         if(dados.valor) document.getElementById('b-valor').value=dados.valor;
         if(dados.vencimento) document.getElementById('b-vencimento').value=dados.vencimento;
         if(dados.linha) document.getElementById('b-linha').value=dados.linha;
-        status.innerHTML='✅ Li o boleto! <b>Confira</b> o valor e o vencimento abaixo.';
+        const campoBenef=document.getElementById('b-beneficiario');
+        if(dados.beneficiario && !campoBenef.value.trim()) campoBenef.value=dados.beneficiario;
+        status.innerHTML='✅ Li o boleto! <b>Confira</b> os dados preenchidos abaixo.';
       } else {
         status.innerHTML='ℹ️ Não encontrei o código de barras neste PDF. Preencha valor e vencimento à mão.';
       }
