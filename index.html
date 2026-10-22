@@ -421,7 +421,7 @@
       <div class="campo"><label>Vencimento</label><input id="b-vencimento" type="date"></div>
     </div>
     <div class="linha2">
-      <div class="campo"><label>Empresa</label><input id="b-empresa" list="lista-empresas" placeholder="De qual empresa"></div>
+      <div class="campo"><label>Empresa *</label><input id="b-empresa" list="lista-empresas" placeholder="De qual empresa"></div>
       <div class="campo"><label>Descrição (opcional)</label><input id="b-descricao" placeholder="Ex: Aluguel sala 2"></div>
     </div>
     <div class="modal-acoes">
@@ -1398,7 +1398,9 @@ async function salvarBoleto(){
   const benef=document.getElementById('b-beneficiario').value.trim();
   const desc=document.getElementById('b-descricao').value.trim();
   const venc=document.getElementById('b-vencimento').value;
+  const empresa=document.getElementById('b-empresa').value.trim();
   if(!benef && !desc){ toast('Diga o beneficiário ou uma descrição 🙂'); return; }
+  if(!empresa){ toast('Informe a empresa 🙂'); return; }
   if(!venc){ toast('Informe o vencimento'); return; }
   const btn=document.getElementById('mb-salvar'); btn.disabled=true; btn.textContent='Salvando...';
   try{
